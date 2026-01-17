@@ -1,0 +1,256 @@
+<UserControl x:Class="JamrahPOS.Views.OrdersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewmodels="clr-namespace:JamrahPOS.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1200">
+    
+    <UserControl.DataContext>
+        <viewmodels:OrdersViewModel />
+    </UserControl.DataContext>
+
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Filters Section -->
+        <Border Grid.Row="0" Background="White" Padding="20" Margin="10,10,10,5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Title and Refresh -->
+                <Grid Grid.Row="0" Margin="0,0,0,15">
+                    <TextBlock Text="إدارة الطلبات" 
+                               FontSize="24" 
+                               FontWeight="Bold" 
+                               HorizontalAlignment="Right" 
+                               FlowDirection="RightToLeft"/>
+                    <Button Content="🔄 تحديث" 
+                            Command="{Binding RefreshCommand}"
+                            FontSize="14"
+                            Padding="15,8"
+                            Background="#2196F3"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            HorizontalAlignment="Left"/>
+                </Grid>
+
+                <!-- Filters -->
+                <Grid Grid.Row="1" FlowDirection="RightToLeft">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Date Range -->
+                    <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                        <TextBlock Text="من تاريخ" FontSize="12" Margin="0,0,0,5"/>
+                        <DatePicker SelectedDate="{Binding StartDate}" 
+                                    FontSize="14" 
+                                    Width="140"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,15,0">
+                        <TextBlock Text="إلى تاريخ" FontSize="12" Margin="0,0,0,5"/>
+                        <DatePicker SelectedDate="{Binding EndDate}" 
+                                    FontSize="14" 
+                                    Width="140"/>
+                    </StackPanel>
+
+                    <!-- Cashier Filter -->
+                    <StackPanel Grid.Column="2" Margin="0,0,15,0">
+                        <TextBlock Text="الكاشير" FontSize="12" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding Cashiers}" 
+                                  SelectedItem="{Binding SelectedCashier}"
+                                  DisplayMemberPath="Username"
+                                  FontSize="14" 
+                                  Width="150">
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="FlowDirection" Value="RightToLeft"/>
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox">
+                                    <Style.Triggers>
+                                        <Trigger Property="SelectedItem" Value="{x:Null}">
+                                            <Setter Property="Background" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Payment Method Filter -->
+                    <StackPanel Grid.Column="3" Margin="0,0,15,0">
+                        <TextBlock Text="طريقة الدفع" FontSize="12" Margin="0,0,0,5"/>
+                        <ComboBox SelectedItem="{Binding SelectedPaymentMethod}" 
+                                  FontSize="14" 
+                                  Width="140">
+                            <ComboBoxItem Content="الكل"/>
+                            <ComboBoxItem Content="نقداً"/>
+                            <ComboBoxItem Content="بطاقة"/>
+                            <ComboBoxItem Content="تحويل بنكي"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Show Voided -->
+                    <StackPanel Grid.Column="4" Margin="0,0,15,0" VerticalAlignment="Bottom">
+                        <CheckBox Content="عرض الملغي" 
+                                  IsChecked="{Binding ShowVoided}"
+                                  FontSize="14"
+                                  FlowDirection="RightToLeft"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Orders List -->
+        <Border Grid.Row="1" Background="White" Margin="10,5,10,10">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Orders}" Padding="10">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" 
+                                    BorderBrush="#E0E0E0" 
+                                    BorderThickness="1" 
+                                    CornerRadius="5" 
+                                    Padding="15" 
+                                    Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Order Info -->
+                                    <StackPanel Grid.Row="0" Grid.Column="0" FlowDirection="RightToLeft">
+                                        <TextBlock FontSize="18" FontWeight="Bold" Margin="0,0,0,8">
+                                            <Run Text="رقم الطلب: "/>
+                                            <Run Text="{Binding OrderNumber}" Foreground="#2196F3"/>
+                                        </TextBlock>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="📅 " FontSize="14"/>
+                                            <TextBlock Text="{Binding OrderDateTime, StringFormat='yyyy/MM/dd - HH:mm:ss'}" 
+                                                       FontSize="14" 
+                                                       Foreground="#666666"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="👤 " FontSize="14"/>
+                                            <TextBlock Text="{Binding Cashier.Username}" 
+                                                       FontSize="14" 
+                                                       Foreground="#666666"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="💳 " FontSize="14"/>
+                                            <TextBlock Text="{Binding PaymentMethod}" 
+                                                       FontSize="14" 
+                                                       Foreground="#666666"/>
+                                        </StackPanel>
+
+                                        <TextBlock FontSize="20" FontWeight="Bold" Foreground="#4CAF50" Margin="0,8,0,0">
+                                            <Run Text="الإجمالي: "/>
+                                            <Run Text="{Binding TotalAmount, StringFormat='{}{0:N2}'}"/>
+                                            <Run Text=" ريال"/>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <!-- Status Badge -->
+                                    <Border Grid.Row="0" Grid.Column="1" 
+                                            VerticalAlignment="Top"
+                                            Padding="10,5"
+                                            CornerRadius="3"
+                                            Margin="0,0,0,10">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#4CAF50"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsVoided}" Value="True">
+                                                        <Setter Property="Background" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="نشط"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsVoided}" Value="True">
+                                                            <Setter Property="Text" Value="ملغي"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+
+                                    <!-- Action Buttons -->
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                Orientation="Horizontal" 
+                                                HorizontalAlignment="Left"
+                                                Margin="0,10,0,0">
+                                        <Button Content="📋 عرض التفاصيل"
+                                                Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}"
+                                                FontSize="14"
+                                                Padding="15,8"
+                                                Background="#2196F3"
+                                                Foreground="White"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                Margin="0,0,10,0"/>
+
+                                        <Button Content="❌ إلغاء الطلب"
+                                                Command="{Binding DataContext.VoidOrderCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}"
+                                                FontSize="14"
+                                                Padding="15,8"
+                                                Background="#F44336"
+                                                Foreground="White"
+                                                BorderThickness="0"
+                                                Cursor="Hand">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsVoided}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding DataContext.IsAdmin, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

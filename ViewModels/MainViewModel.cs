@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using JamrahPOS.Helpers;
 using JamrahPOS.Services;
@@ -14,6 +15,7 @@ namespace JamrahPOS.ViewModels
         private string _currentUserName = string.Empty;
         private string _currentUserRole = string.Empty;
         private bool _isAdmin = false;
+        private UserControl? _currentView;
 
         public string Title
         {
@@ -39,7 +41,15 @@ namespace JamrahPOS.ViewModels
             set => SetProperty(ref _isAdmin, value);
         }
 
+        public UserControl? CurrentView
+        {
+            get => _currentView;
+            set => SetProperty(ref _currentView, value);
+        }
+
         public ICommand LogoutCommand { get; }
+        public ICommand NavigateToPosCommand { get; }
+        public ICommand NavigateToOrdersCommand { get; }
 
         public MainViewModel()
         {
@@ -53,6 +63,21 @@ namespace JamrahPOS.ViewModels
             }
 
             LogoutCommand = new RelayCommand(_ => Logout());
+            NavigateToPosCommand = new RelayCommand(_ => NavigateToPos());
+            NavigateToOrdersCommand = new RelayCommand(_ => NavigateToOrders());
+
+            // Start with POS view
+            NavigateToPos();
+        }
+
+        private void NavigateToPos()
+        {
+            CurrentView = new Views.PosView();
+        }
+
+        private void NavigateToOrders()
+        {
+            CurrentView = new Views.OrdersView();
         }
 
         private void Logout()
