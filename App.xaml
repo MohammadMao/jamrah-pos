@@ -1,0 +1,13 @@
+<Application x:Class="JamrahPOS.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:JamrahPOS.Converters"
+             StartupUri="Views/LoginWindow.xaml">
+    <Application.Resources>
+        <!-- Value Converters -->
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        
+        <!-- Global Resources and Styles will go here -->
+    </Application.Resources>
+</Application>
