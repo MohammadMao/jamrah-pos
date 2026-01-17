@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewmodels="clr-namespace:JamrahPOS.ViewModels"
+        xmlns:local="clr-namespace:JamrahPOS.Views"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="600" Width="1000"
         WindowState="Maximized"
@@ -84,13 +85,9 @@
 
         <!-- Main Content Area -->
         <Grid Grid.Row="1" Background="#F5F5F5">
-            <TextBlock Text="مرحباً بكم في نظام نقاط البيع" 
-                       FontSize="28" 
-                       FontWeight="Bold"
-                       Foreground="#666666"
-                       HorizontalAlignment="Center" 
-                       VerticalAlignment="Center"
-                       FlowDirection="RightToLeft"/>
+            <ContentControl>
+                <local:PosView />
+            </ContentControl>
         </Grid>
     </Grid>
 </Window>

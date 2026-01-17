@@ -7,7 +7,8 @@
         <!-- Value Converters -->
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <converters:CurrencyConverter x:Key="CurrencyConverter"/>
         
-        <!-- Global Resources and Styles will go here -->
+        <!-- Global Resources and Styles -->
     </Application.Resources>
 </Application>
