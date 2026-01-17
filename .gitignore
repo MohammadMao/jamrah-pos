@@ -73,10 +73,26 @@ $RECYCLE.BIN/
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite3
+
+# Local application data (where the database is stored)
+**/LocalApplicationData/
+**/AppData/
 
 # Backup files
 *.bak
 *.backup
+
+# Environment-specific configuration files
+appsettings.local.json
+appsettings.Development.json
+*.local.config
+
+# User-generated files
+**/Logs/
+**/Reports/
+**/Exports/
 
 # Publish profiles
 PublishProfiles/
