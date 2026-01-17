@@ -1,0 +1,120 @@
+<Window x:Class="JamrahPOS.Views.PaymentMethodDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="طريقة الدفع" 
+        Height="350" 
+        Width="400"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize"
+        FlowDirection="RightToLeft"
+        Background="#F5F5F5"
+        FontFamily="Arial">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" 
+                   Text="اختر طريقة الدفع" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,20"/>
+
+        <!-- Total Amount Display -->
+        <Border Grid.Row="1" 
+                Background="White" 
+                Padding="15" 
+                CornerRadius="5"
+                Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="إجمالي الطلب" 
+                           FontSize="16" 
+                           Foreground="#666666"
+                           HorizontalAlignment="Center"/>
+                <TextBlock x:Name="TotalAmountText" 
+                           Text="0.00 ريال" 
+                           FontSize="32" 
+                           FontWeight="Bold" 
+                           Foreground="#4CAF50"
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Payment Methods -->
+        <StackPanel Grid.Row="2">
+            <RadioButton x:Name="CashRadioButton" 
+                         Content="نقداً" 
+                         FontSize="18" 
+                         FontWeight="SemiBold"
+                         Padding="10"
+                         IsChecked="True"
+                         Margin="0,0,0,10"
+                         GroupName="PaymentMethod"/>
+            
+            <RadioButton x:Name="CardRadioButton" 
+                         Content="بطاقة" 
+                         FontSize="18" 
+                         FontWeight="SemiBold"
+                         Padding="10"
+                         Margin="0,0,0,10"
+                         GroupName="PaymentMethod"/>
+            
+            <RadioButton x:Name="OnlineRadioButton" 
+                         Content="تحويل بنكي" 
+                         FontSize="18" 
+                         FontWeight="SemiBold"
+                         Padding="10"
+                         Margin="0,0,0,10"
+                         GroupName="PaymentMethod"/>
+        </StackPanel>
+
+        <!-- Print Option -->
+        <CheckBox Grid.Row="3"
+                  x:Name="PrintReceiptCheckBox"
+                  Content="طباعة الفاتورة"
+                  FontSize="16"
+                  FontWeight="SemiBold"
+                  IsChecked="True"
+                  Margin="0,20,0,20"/>
+
+        <!-- Action Buttons -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Content="إلغاء"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Padding="0,15"
+                    Background="#757575"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="Cancel_Click"/>
+
+            <Button Grid.Column="2"
+                    Content="تأكيد"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Padding="0,15"
+                    Background="#4CAF50"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="Confirm_Click"/>
+        </Grid>
+    </Grid>
+</Window>

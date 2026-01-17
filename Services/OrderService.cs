@@ -142,10 +142,17 @@ namespace JamrahPOS.Services
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
+            // Reload order with related data for printing
+            var savedOrder = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Cashier)
+                .FirstOrDefaultAsync(o => o.Id == order.Id);
+
             // Clear cart after successful save
             ClearCart();
 
-            return order;
+            return savedOrder ?? order;
         }
 
         /// <summary>

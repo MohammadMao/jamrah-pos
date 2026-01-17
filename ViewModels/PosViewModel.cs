@@ -14,6 +14,7 @@ namespace JamrahPOS.ViewModels
     public class PosViewModel : BaseViewModel
     {
         private readonly OrderService _orderService;
+        private readonly PrintService _printService;
         private ObservableCollection<Category> _categories = new();
         private ObservableCollection<MenuItem> _menuItems = new();
         private ObservableCollection<CartItem> _cartItems = new();
@@ -74,6 +75,7 @@ namespace JamrahPOS.ViewModels
         {
             var context = new PosDbContext();
             _orderService = new OrderService(context);
+            _printService = new PrintService();
 
             // Subscribe to cart items collection changes
             _orderService.CartItems.CollectionChanged += (s, e) => UpdateCart();
@@ -205,14 +207,46 @@ namespace JamrahPOS.ViewModels
                 return;
             }
 
-            // TODO: Show payment dialog to select payment method
-            // For now, default to Cash
-            var paymentMethod = "نقداً";
+            // Show payment method dialog
+            var paymentDialog = new Views.PaymentMethodDialog(TotalAmount);
+            paymentDialog.Owner = Application.Current.MainWindow;
+
+            if (paymentDialog.ShowDialog() != true)
+            {
+                return; // User cancelled
+            }
 
             try
             {
                 IsLoading = true;
-                var order = await _orderService.SaveOrderAsync(currentUser.Id, paymentMethod);
+                var order = await _orderService.SaveOrderAsync(currentUser.Id, paymentDialog.PaymentMethod);
+
+                // Generate receipt
+                var receiptText = _printService.GenerateReceipt(order, currentUser);
+
+                // Save receipt to file
+                var receiptPath = await _printService.SaveReceiptToFileAsync(receiptText, order.OrderNumber);
+
+                // Print if requested
+                if (paymentDialog.ShouldPrint)
+                {
+                    var printSuccess = await _printService.PrintReceiptAsync(receiptText);
+                    
+                    if (!printSuccess)
+                    {
+                        // If printing fails, ask if user wants to open the file
+                        var openResult = MessageBox.Show(
+                            "فشلت الطباعة. هل تريد فتح الفاتورة؟",
+                            "خطأ في الطباعة",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (openResult == MessageBoxResult.Yes)
+                        {
+                            _printService.OpenReceipt(receiptPath);
+                        }
+                    }
+                }
 
                 MessageBox.Show(
                     $"تم حفظ الطلب بنجاح\nرقم الطلب: {order.OrderNumber}\nالإجمالي: {order.TotalAmount:N2} ريال",
