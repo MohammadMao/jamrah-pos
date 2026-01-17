@@ -94,11 +94,14 @@
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
+                                        
+                                        <!-- Item Info -->
                                         <StackPanel Grid.Row="0" Grid.Column="0" FlowDirection="RightToLeft">
                                             <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
@@ -107,9 +110,47 @@
                                                 <TextBlock Text="{Binding UnitPrice, StringFormat='{}{0:N2}'}" FontSize="12" Foreground="#666666"/>
                                                 <TextBlock Text=" ريال" FontSize="12" Foreground="#666666"/>
                                             </StackPanel>
+                                            
+                                            <!-- Discount Display -->
+                                            <TextBlock Text="{Binding DiscountAmount, StringFormat='خصم: {0:N2} ريال'}" 
+                                                       FontSize="11" 
+                                                       Foreground="#FF6F00" 
+                                                       FontWeight="SemiBold"
+                                                       Margin="0,3,0,0"
+                                                       Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibility}}"/>
                                         </StackPanel>
-                                        <Button Grid.Row="0" Grid.Column="1" Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Content="×" Width="30" Height="30" FontSize="20" FontWeight="Bold" Background="#F44336" Foreground="White" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding TotalPrice, StringFormat='المجموع: {0:N2} ریال'}" FontSize="14" FontWeight="Bold" Foreground="#4CAF50" HorizontalAlignment="Right" FlowDirection="RightToLeft" Margin="0,5,0,0"/>
+                                        
+                                        <!-- Delete Button -->
+                                        <Button Grid.Row="0" Grid.Column="1" 
+                                                Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
+                                                CommandParameter="{Binding}" 
+                                                Content="×" 
+                                                Width="30" Height="30" 
+                                                FontSize="20" FontWeight="Bold" 
+                                                Background="#F44336" Foreground="White" 
+                                                BorderThickness="0" Cursor="Hand" 
+                                                VerticalAlignment="Top"/>
+                                        
+                                        <!-- Total Price -->
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                   Text="{Binding TotalPrice, StringFormat='المجموع: {0:N2} ریال'}" 
+                                                   FontSize="14" FontWeight="Bold" 
+                                                   Foreground="#4CAF50" 
+                                                   HorizontalAlignment="Right" 
+                                                   FlowDirection="RightToLeft" 
+                                                   Margin="0,5,0,0"/>
+                                        
+                                        <!-- Edit Button -->
+                                        <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
+                                                CommandParameter="{Binding}" 
+                                                Content="✏ تعديل" 
+                                                FontSize="12"
+                                                Padding="8,5" 
+                                                Background="#2196F3" Foreground="White" 
+                                                BorderThickness="0" Cursor="Hand" 
+                                                HorizontalAlignment="Stretch"
+                                                Margin="0,8,0,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

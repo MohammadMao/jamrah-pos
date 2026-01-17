@@ -65,6 +65,7 @@ namespace JamrahPOS.ViewModels
 
         public ICommand AddItemCommand { get; }
         public ICommand RemoveItemCommand { get; }
+        public ICommand EditItemCommand { get; }
         public ICommand ClearCartCommand { get; }
         public ICommand CheckoutCommand { get; }
         public ICommand ShowAllCategoriesCommand { get; }
@@ -77,8 +78,9 @@ namespace JamrahPOS.ViewModels
             // Subscribe to cart items collection changes
             _orderService.CartItems.CollectionChanged += (s, e) => UpdateCart();
 
-            AddItemCommand = new RelayCommand(async param => await AddItemAsync(param as MenuItem));
+            AddItemCommand = new RelayCommand(param => AddItem(param as MenuItem));
             RemoveItemCommand = new RelayCommand(param => RemoveItem(param as CartItem));
+            EditItemCommand = new RelayCommand(param => EditItem(param as CartItem));
             ClearCartCommand = new RelayCommand(_ => ClearCart());
             CheckoutCommand = new RelayCommand(async _ => await CheckoutAsync(), _ => CartItems.Count > 0);
             ShowAllCategoriesCommand = new RelayCommand(_ => ShowAllCategories());
@@ -124,7 +126,7 @@ namespace JamrahPOS.ViewModels
             }
         }
 
-        private async Task AddItemAsync(MenuItem? menuItem)
+        private void AddItem(MenuItem? menuItem)
         {
             if (menuItem == null) return;
 
@@ -152,6 +154,21 @@ namespace JamrahPOS.ViewModels
             if (result == MessageBoxResult.Yes)
             {
                 _orderService.RemoveFromCart(item);
+                UpdateCart();
+            }
+        }
+
+        private void EditItem(CartItem? item)
+        {
+            if (item == null) return;
+
+            // Show edit dialog
+            var dialog = new Views.EditItemDialog(item);
+            dialog.Owner = Application.Current.MainWindow;
+
+            if (dialog.ShowDialog() == true)
+            {
+                _orderService.UpdateCartItem(item, dialog.Quantity, dialog.UnitPrice);
                 UpdateCart();
             }
         }
@@ -204,7 +221,6 @@ namespace JamrahPOS.ViewModels
                     MessageBoxImage.Information);
 
                 UpdateCart();
-                await Task.CompletedTask;
             }
             catch (Exception ex)
             {

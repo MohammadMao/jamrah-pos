@@ -71,6 +71,35 @@ namespace JamrahPOS.Services
         }
 
         /// <summary>
+        /// Updates the price of an item in the cart (for applying discounts)
+        /// </summary>
+        public void UpdatePrice(CartItem item, decimal newPrice)
+        {
+            if (newPrice < 0)
+            {
+                throw new ArgumentException("Price cannot be negative", nameof(newPrice));
+            }
+
+            item.UnitPrice = newPrice;
+        }
+
+        /// <summary>
+        /// Updates both quantity and price of an item in the cart
+        /// </summary>
+        public void UpdateCartItem(CartItem item, int newQuantity, decimal newPrice)
+        {
+            if (newQuantity <= 0)
+            {
+                RemoveFromCart(item);
+            }
+            else
+            {
+                item.Quantity = newQuantity;
+                item.UnitPrice = newPrice;
+            }
+        }
+
+        /// <summary>
         /// Clears all items from the cart
         /// </summary>
         public void ClearCart()
