@@ -43,4 +43,26 @@ namespace JamrahPOS.Converters
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Converts a value to Visibility based on equality with a parameter
+    /// </summary>
+    public class EqualToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (int.TryParse(value?.ToString(), out int intValue) && 
+                int.TryParse(parameter?.ToString(), out int paramValue))
+            {
+                return intValue == paramValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
+

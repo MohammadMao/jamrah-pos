@@ -7,6 +7,7 @@
         <!-- Value Converters -->
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <converters:EqualToVisibilityConverter x:Key="EqualToVisibilityConverter"/>
         <converters:CurrencyConverter x:Key="CurrencyConverter"/>
         
         <!-- Global Resources and Styles -->

@@ -53,6 +53,7 @@ namespace JamrahPOS.ViewModels
         public ICommand NavigateToCategoriesCommand { get; }
         public ICommand NavigateToMenuItemsCommand { get; }
         public ICommand NavigateToUsersCommand { get; }
+        public ICommand NavigateToReportsCommand { get; }
 
         public MainViewModel()
         {
@@ -71,6 +72,7 @@ namespace JamrahPOS.ViewModels
             NavigateToCategoriesCommand = new RelayCommand(_ => NavigateToCategories());
             NavigateToMenuItemsCommand = new RelayCommand(_ => NavigateToMenuItems());
             NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers());
+            NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
 
             // Start with POS view
             NavigateToPos();
@@ -99,6 +101,11 @@ namespace JamrahPOS.ViewModels
         private void NavigateToUsers()
         {
             CurrentView = new Views.UsersView();
+        }
+
+        private void NavigateToReports()
+        {
+            CurrentView = new Views.ReportsView();
         }
 
         private void Logout()

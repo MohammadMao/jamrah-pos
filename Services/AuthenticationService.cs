@@ -25,27 +25,55 @@ namespace JamrahPOS.Services
         /// <returns>User object if authentication succeeds, null otherwise</returns>
         public async Task<User?> AuthenticateAsync(string username, string password)
         {
+            Console.WriteLine($"[AUTH] AuthenticateAsync called with username: {username}");
+            
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
+                Console.WriteLine("[AUTH] Username or password is empty");
                 return null;
             }
 
-            // Find user by username
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
-
-            if (user == null)
+            try
             {
-                return null;
-            }
+                Console.WriteLine("[AUTH] Querying database for user...");
+                // Find user by username
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
 
-            // Verify password
-            if (!VerifyPassword(password, user.PasswordHash))
+                if (user == null)
+                {
+                    Console.WriteLine($"[AUTH] User '{username}' not found in database");
+                    // List all users for debugging
+                    var allUsers = await _context.Users.ToListAsync();
+                    Console.WriteLine($"[AUTH] Total users in database: {allUsers.Count}");
+                    foreach (var u in allUsers)
+                    {
+                        Console.WriteLine($"[AUTH]   - Username: {u.Username}, IsActive: {u.IsActive}");
+                    }
+                    return null;
+                }
+
+                Console.WriteLine($"[AUTH] User found: {user.Username}, IsActive: {user.IsActive}");
+
+                // Verify password
+                bool passwordValid = VerifyPassword(password, user.PasswordHash);
+                Console.WriteLine($"[AUTH] Password verification result: {passwordValid}");
+                
+                if (!passwordValid)
+                {
+                    Console.WriteLine("[AUTH] Password verification failed");
+                    return null;
+                }
+
+                Console.WriteLine($"[AUTH] Authentication successful for user: {user.Username}");
+                return user;
+            }
+            catch (Exception ex)
             {
-                return null;
+                Console.WriteLine($"[AUTH] EXCEPTION in AuthenticateAsync: {ex.Message}");
+                Console.WriteLine($"[AUTH] Stack trace: {ex.StackTrace}");
+                throw;
             }
-
-            return user;
         }
 
         /// <summary>
@@ -68,10 +96,19 @@ namespace JamrahPOS.Services
         {
             try
             {
-                return BCrypt.Net.BCrypt.Verify(password, hash);
+                Console.WriteLine($"[AUTH] VerifyPassword called");
+                Console.WriteLine($"[AUTH] Password to verify: {password}");
+                Console.WriteLine($"[AUTH] Hash from DB: {hash}");
+                
+                bool result = BCrypt.Net.BCrypt.Verify(password, hash);
+                Console.WriteLine($"[AUTH] BCrypt.Verify result: {result}");
+                
+                return result;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[AUTH] EXCEPTION in VerifyPassword: {ex.Message}");
+                Console.WriteLine($"[AUTH] Exception type: {ex.GetType().Name}");
                 return false;
             }
         }
