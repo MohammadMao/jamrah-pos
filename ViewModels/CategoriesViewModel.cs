@@ -36,14 +36,26 @@ namespace JamrahPOS.ViewModels
 
         public CategoriesViewModel()
         {
-            _context = new PosDbContext();
+            try
+            {
+                Console.WriteLine("[CATEGORIES] CategoriesViewModel constructor started");
+                _context = new PosDbContext();
 
-            AddCategoryCommand = new RelayCommand(_ => AddCategory());
-            EditCategoryCommand = new RelayCommand(param => EditCategory(param as Category));
-            ToggleActiveCommand = new RelayCommand(async param => await ToggleActiveAsync(param as Category));
-            RefreshCommand = new RelayCommand(async _ => await LoadCategoriesAsync());
+                AddCategoryCommand = new RelayCommand(_ => AddCategory());
+                EditCategoryCommand = new RelayCommand(param => EditCategory(param as Category));
+                ToggleActiveCommand = new RelayCommand(async param => await ToggleActiveAsync(param as Category));
+                RefreshCommand = new RelayCommand(async _ => await LoadCategoriesAsync());
 
-            _ = LoadCategoriesAsync();
+                Console.WriteLine("[CATEGORIES] Commands initialized, loading categories...");
+                _ = LoadCategoriesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CATEGORIES] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[CATEGORIES] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[CATEGORIES] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         private async Task LoadCategoriesAsync()
@@ -51,15 +63,20 @@ namespace JamrahPOS.ViewModels
             IsLoading = true;
             try
             {
+                Console.WriteLine("[CATEGORIES] Loading categories...");
                 var categories = await _context.Categories
                     .Include(c => c.MenuItems)
                     .OrderBy(c => c.Name)
                     .ToListAsync();
 
+                Console.WriteLine($"[CATEGORIES] Loaded {categories.Count} categories");
                 Categories = new ObservableCollection<Category>(categories);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[CATEGORIES] ERROR loading categories: {ex.Message}");
+                Console.WriteLine($"[CATEGORIES] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[CATEGORIES] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في تحميل التصنيفات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

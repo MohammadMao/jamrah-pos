@@ -110,17 +110,29 @@ namespace JamrahPOS.ViewModels
 
         public OrdersViewModel()
         {
-            _context = new PosDbContext();
+            try
+            {
+                Console.WriteLine("[ORDERS] OrdersViewModel constructor started");
+                _context = new PosDbContext();
 
-            // Set default date range to today
-            _startDate = DateTime.Today;
-            _endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+                // Set default date range to today
+                _startDate = DateTime.Today;
+                _endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
 
-            ViewDetailsCommand = new RelayCommand(param => ViewOrderDetails(param as Order));
-            VoidOrderCommand = new RelayCommand(async param => await VoidOrderAsync(param as Order), _ => IsAdmin);
-            RefreshCommand = new RelayCommand(async _ => await LoadOrdersAsync());
+                ViewDetailsCommand = new RelayCommand(param => ViewOrderDetails(param as Order));
+                VoidOrderCommand = new RelayCommand(async param => await VoidOrderAsync(param as Order), _ => IsAdmin);
+                RefreshCommand = new RelayCommand(async _ => await LoadOrdersAsync());
 
-            _ = LoadDataAsync();
+                _ = LoadDataAsync();
+                Console.WriteLine("[ORDERS] OrdersViewModel initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ORDERS] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[ORDERS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[ORDERS] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         private async Task LoadDataAsync()
@@ -128,17 +140,23 @@ namespace JamrahPOS.ViewModels
             IsLoading = true;
             try
             {
+                Console.WriteLine("[ORDERS] LoadDataAsync started");
                 // Load cashiers for filter
                 var cashiers = await _context.Users
                     .Where(u => u.IsActive)
                     .OrderBy(u => u.Username)
                     .ToListAsync();
+                Console.WriteLine($"[ORDERS] Loaded {cashiers.Count} cashiers");
                 Cashiers = new ObservableCollection<User>(cashiers);
 
                 await LoadOrdersAsync();
+                Console.WriteLine("[ORDERS] LoadDataAsync completed successfully");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ORDERS] ERROR in LoadDataAsync: {ex.Message}");
+                Console.WriteLine($"[ORDERS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[ORDERS] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في تحميل البيانات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

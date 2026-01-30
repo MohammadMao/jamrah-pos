@@ -57,83 +57,175 @@ namespace JamrahPOS.ViewModels
 
         public MainViewModel()
         {
-            // Initialize current user information
-            var session = SessionService.Instance;
-            if (session.IsLoggedIn && session.CurrentUser != null)
+            try
             {
-                CurrentUserName = session.CurrentUser.Username;
-                CurrentUserRole = session.CurrentUser.Role == UserRoles.Admin ? "مدير" : "كاشير";
-                IsAdmin = session.IsAdmin;
+                Console.WriteLine("[MAIN] MainViewModel constructor started");
+                // Initialize current user information
+                var session = SessionService.Instance;
+                if (session.IsLoggedIn && session.CurrentUser != null)
+                {
+                    CurrentUserName = session.CurrentUser.Username;
+                    CurrentUserRole = session.CurrentUser.Role == UserRoles.Admin ? "مدير" : "كاشير";
+                    IsAdmin = session.IsAdmin;
+                    Console.WriteLine($"[MAIN] User session loaded - Username: {CurrentUserName}, Role: {CurrentUserRole}, IsAdmin: {IsAdmin}");
+                }
+                else
+                {
+                    Console.WriteLine("[MAIN] WARNING: No user session found");
+                }
+
+                LogoutCommand = new RelayCommand(_ => Logout());
+                NavigateToPosCommand = new RelayCommand(_ => NavigateToPos());
+                NavigateToOrdersCommand = new RelayCommand(_ => NavigateToOrders());
+                NavigateToCategoriesCommand = new RelayCommand(_ => NavigateToCategories());
+                NavigateToMenuItemsCommand = new RelayCommand(_ => NavigateToMenuItems());
+                NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers());
+                NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
+
+                // Start with POS view
+                NavigateToPos();
+                Console.WriteLine("[MAIN] MainViewModel initialized successfully");
             }
-
-            LogoutCommand = new RelayCommand(_ => Logout());
-            NavigateToPosCommand = new RelayCommand(_ => NavigateToPos());
-            NavigateToOrdersCommand = new RelayCommand(_ => NavigateToOrders());
-            NavigateToCategoriesCommand = new RelayCommand(_ => NavigateToCategories());
-            NavigateToMenuItemsCommand = new RelayCommand(_ => NavigateToMenuItems());
-            NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers());
-            NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
-
-            // Start with POS view
-            NavigateToPos();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         private void NavigateToPos()
         {
-            CurrentView = new Views.PosView();
+            try
+            {
+                Console.WriteLine("[MAIN] Navigating to POS view");
+                CurrentView = new Views.PosView();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to POS: {ex.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة نقطة البيع: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void NavigateToOrders()
         {
-            CurrentView = new Views.OrdersView();
+            try
+            {
+                Console.WriteLine("[MAIN] Navigating to Orders view");
+                CurrentView = new Views.OrdersView();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to Orders: {ex.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة الطلبات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void NavigateToCategories()
         {
-            CurrentView = new Views.CategoriesView();
+            try
+            {
+                Console.WriteLine("[MAIN] Navigating to Categories view");
+                CurrentView = new Views.CategoriesView();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to Categories: {ex.Message}");
+                Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة التصنيفات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void NavigateToMenuItems()
         {
-            CurrentView = new Views.MenuItemsView();
+            try
+            {
+                Console.WriteLine("[MAIN] Navigating to MenuItems view");
+                CurrentView = new Views.MenuItemsView();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to MenuItems: {ex.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة قائمة الطعام: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void NavigateToUsers()
         {
-            CurrentView = new Views.UsersView();
+            try
+            {
+                Console.WriteLine("[MAIN] Navigating to Users view");
+                CurrentView = new Views.UsersView();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to Users: {ex.Message}");
+                Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة المستخدمين: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void NavigateToReports()
         {
-            CurrentView = new Views.ReportsView();
+            try
+            {
+                Console.WriteLine("[MAIN] Navigating to Reports view");
+                CurrentView = new Views.ReportsView();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to Reports: {ex.Message}");
+                Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة التقارير: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Logout()
         {
-            var result = MessageBox.Show(
-                "هل تريد تسجيل الخروج؟",
-                "تأكيد الخروج",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
+            try
             {
-                // Clear session
-                SessionService.Instance.Logout();
+                Console.WriteLine("[MAIN] Logout requested");
+                var result = MessageBox.Show(
+                    "هل تريد تسجيل الخروج؟",
+                    "تأكيد الخروج",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
 
-                // Open login window
-                var loginWindow = new Views.LoginWindow();
-                loginWindow.Show();
-
-                // Close main window
-                foreach (Window window in Application.Current.Windows)
+                if (result == MessageBoxResult.Yes)
                 {
-                    if (window is Views.MainWindow)
+                    Console.WriteLine("[MAIN] User confirmed logout");
+                    // Clear session
+                    SessionService.Instance.Logout();
+
+                    // Open login window
+                    var loginWindow = new Views.LoginWindow();
+                    loginWindow.Show();
+
+                    // Close main window
+                    foreach (Window window in Application.Current.Windows)
                     {
-                        window.Close();
-                        break;
+                        if (window is Views.MainWindow)
+                        {
+                            window.Close();
+                            break;
+                        }
                     }
+                    Console.WriteLine("[MAIN] Logout completed");
                 }
+                else
+                {
+                    Console.WriteLine("[MAIN] Logout cancelled");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR during logout: {ex.Message}");
+                MessageBox.Show($"خطأ في تسجيل الخروج: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

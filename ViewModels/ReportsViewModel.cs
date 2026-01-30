@@ -99,27 +99,51 @@ namespace JamrahPOS.ViewModels
 
         public ReportsViewModel()
         {
-            _startDate = DateTime.Now.AddDays(-30);
-            _endDate = DateTime.Now;
+            try
+            {
+                Console.WriteLine("[REPORTS] ReportsViewModel() constructor started");
+                _startDate = DateTime.Now.AddDays(-30);
+                _endDate = DateTime.Now;
 
-            // Initialize context and service
-            var optionsBuilder = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<PosDbContext>();
-            optionsBuilder.UseSqlite("Data Source=pos.db");
-            var context = new PosDbContext(optionsBuilder.Options);
-            _reportService = new ReportService(context);
+                // Initialize context and service
+                var optionsBuilder = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<PosDbContext>();
+                optionsBuilder.UseSqlite("Data Source=pos.db");
+                var context = new PosDbContext(optionsBuilder.Options);
+                _reportService = new ReportService(context);
 
-            RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
-            ExportCommand = new RelayCommand(_ => ExportToCSV());
+                RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
+                ExportCommand = new RelayCommand(_ => ExportToCSV());
+                Console.WriteLine("[REPORTS] ReportsViewModel initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[REPORTS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[REPORTS] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         public ReportsViewModel(PosDbContext context)
         {
-            _startDate = DateTime.Now.AddDays(-30);
-            _endDate = DateTime.Now;
-            _reportService = new ReportService(context);
+            try
+            {
+                Console.WriteLine("[REPORTS] ReportsViewModel(context) constructor started");
+                _startDate = DateTime.Now.AddDays(-30);
+                _endDate = DateTime.Now;
+                _reportService = new ReportService(context);
 
-            RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
-            ExportCommand = new RelayCommand(_ => ExportToCSV());
+                RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
+                ExportCommand = new RelayCommand(_ => ExportToCSV());
+                Console.WriteLine("[REPORTS] ReportsViewModel initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[REPORTS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[REPORTS] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -149,6 +173,9 @@ namespace JamrahPOS.ViewModels
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[REPORTS] ERROR in LoadReportsAsync: {ex.Message}");
+                Console.WriteLine($"[REPORTS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[REPORTS] Inner exception: {ex.InnerException?.Message}");
                 StatusMessage = $"خطأ في تحميل التقارير: {ex.Message}";
                 MessageBox.Show($"Error loading reports: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -163,8 +190,18 @@ namespace JamrahPOS.ViewModels
         /// </summary>
         private async Task LoadDailyReportsAsync()
         {
-            var reports = await _reportService.GetDailySalesReportsAsync(StartDate, EndDate);
-            DailyReports = new ObservableCollection<DailySalesReport>(reports);
+            try
+            {
+                Console.WriteLine($"[REPORTS] Loading daily reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
+                var reports = await _reportService.GetDailySalesReportsAsync(StartDate, EndDate);
+                Console.WriteLine($"[REPORTS] Retrieved {reports.Count} daily reports");
+                DailyReports = new ObservableCollection<DailySalesReport>(reports);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] ERROR in LoadDailyReportsAsync: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -172,8 +209,18 @@ namespace JamrahPOS.ViewModels
         /// </summary>
         private async Task LoadWeeklyReportsAsync()
         {
-            var reports = await _reportService.GetWeeklySalesReportsAsync(StartDate, EndDate);
-            WeeklyReports = new ObservableCollection<WeeklySalesReport>(reports);
+            try
+            {
+                Console.WriteLine($"[REPORTS] Loading weekly reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
+                var reports = await _reportService.GetWeeklySalesReportsAsync(StartDate, EndDate);
+                Console.WriteLine($"[REPORTS] Retrieved {reports.Count} weekly reports");
+                WeeklyReports = new ObservableCollection<WeeklySalesReport>(reports);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] ERROR in LoadWeeklyReportsAsync: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -181,8 +228,18 @@ namespace JamrahPOS.ViewModels
         /// </summary>
         private async Task LoadMonthlyReportsAsync()
         {
-            var reports = await _reportService.GetMonthlyRangeReportsAsync(StartDate, EndDate);
-            MonthlyReports = new ObservableCollection<MonthlySalesReport>(reports);
+            try
+            {
+                Console.WriteLine($"[REPORTS] Loading monthly reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
+                var reports = await _reportService.GetMonthlyRangeReportsAsync(StartDate, EndDate);
+                Console.WriteLine($"[REPORTS] Retrieved {reports.Count} monthly reports");
+                MonthlyReports = new ObservableCollection<MonthlySalesReport>(reports);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] ERROR in LoadMonthlyReportsAsync: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>

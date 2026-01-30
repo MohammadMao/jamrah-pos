@@ -73,21 +73,33 @@ namespace JamrahPOS.ViewModels
 
         public PosViewModel()
         {
-            var context = new PosDbContext();
-            _orderService = new OrderService(context);
-            _printService = new PrintService();
+            try
+            {
+                Console.WriteLine("[POS] PosViewModel constructor started");
+                var context = new PosDbContext();
+                _orderService = new OrderService(context);
+                _printService = new PrintService();
 
-            // Subscribe to cart items collection changes
-            _orderService.CartItems.CollectionChanged += (s, e) => UpdateCart();
+                // Subscribe to cart items collection changes
+                _orderService.CartItems.CollectionChanged += (s, e) => UpdateCart();
 
-            AddItemCommand = new RelayCommand(param => AddItem(param as MenuItem));
-            RemoveItemCommand = new RelayCommand(param => RemoveItem(param as CartItem));
-            EditItemCommand = new RelayCommand(param => EditItem(param as CartItem));
-            ClearCartCommand = new RelayCommand(_ => ClearCart());
-            CheckoutCommand = new RelayCommand(async _ => await CheckoutAsync(), _ => CartItems.Count > 0);
-            ShowAllCategoriesCommand = new RelayCommand(_ => ShowAllCategories());
+                AddItemCommand = new RelayCommand(param => AddItem(param as MenuItem));
+                RemoveItemCommand = new RelayCommand(param => RemoveItem(param as CartItem));
+                EditItemCommand = new RelayCommand(param => EditItem(param as CartItem));
+                ClearCartCommand = new RelayCommand(_ => ClearCart());
+                CheckoutCommand = new RelayCommand(async _ => await CheckoutAsync(), _ => CartItems.Count > 0);
+                ShowAllCategoriesCommand = new RelayCommand(_ => ShowAllCategories());
 
-            _ = LoadDataAsync();
+                _ = LoadDataAsync();
+                Console.WriteLine("[POS] PosViewModel initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[POS] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[POS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[POS] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         private async Task LoadDataAsync()
@@ -95,13 +107,19 @@ namespace JamrahPOS.ViewModels
             IsLoading = true;
             try
             {
+                Console.WriteLine("[POS] LoadDataAsync started");
                 var categories = await _orderService.GetCategoriesAsync();
+                Console.WriteLine($"[POS] Loaded {categories.Count} categories");
                 Categories = new ObservableCollection<Category>(categories);
 
                 await LoadMenuItemsAsync();
+                Console.WriteLine("[POS] LoadDataAsync completed successfully");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[POS] ERROR in LoadDataAsync: {ex.Message}");
+                Console.WriteLine($"[POS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[POS] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في تحميل البيانات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -115,11 +133,15 @@ namespace JamrahPOS.ViewModels
             IsLoading = true;
             try
             {
+                Console.WriteLine($"[POS] LoadMenuItemsAsync - Category: {SelectedCategory?.Name ?? "All"}");
                 var items = await _orderService.GetMenuItemsByCategoryAsync(SelectedCategory?.Id);
+                Console.WriteLine($"[POS] Loaded {items.Count} menu items");
                 MenuItems = new ObservableCollection<MenuItem>(items);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[POS] ERROR in LoadMenuItemsAsync: {ex.Message}");
+                Console.WriteLine($"[POS] Stack trace: {ex.StackTrace}");
                 MessageBox.Show($"خطأ في تحميل الأصناف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

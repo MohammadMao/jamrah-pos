@@ -39,16 +39,28 @@ namespace JamrahPOS.ViewModels
 
         public UsersViewModel()
         {
-            _context = new PosDbContext();
-            _authService = new AuthenticationService(_context);
+            try
+            {
+                Console.WriteLine("[USERS] UsersViewModel constructor started");
+                _context = new PosDbContext();
+                _authService = new AuthenticationService(_context);
 
-            AddUserCommand = new RelayCommand(_ => AddUser());
-            EditUserCommand = new RelayCommand(param => EditUser(param as User));
-            ToggleActiveCommand = new RelayCommand(async param => await ToggleActiveAsync(param as User));
-            ResetPasswordCommand = new RelayCommand(async param => await ResetPasswordAsync(param as User));
-            RefreshCommand = new RelayCommand(async _ => await LoadUsersAsync());
+                AddUserCommand = new RelayCommand(_ => AddUser());
+                EditUserCommand = new RelayCommand(param => EditUser(param as User));
+                ToggleActiveCommand = new RelayCommand(async param => await ToggleActiveAsync(param as User));
+                ResetPasswordCommand = new RelayCommand(async param => await ResetPasswordAsync(param as User));
+                RefreshCommand = new RelayCommand(async _ => await LoadUsersAsync());
 
-            _ = LoadUsersAsync();
+                Console.WriteLine("[USERS] Commands initialized, loading users...");
+                _ = LoadUsersAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[USERS] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[USERS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[USERS] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         private async Task LoadUsersAsync()
@@ -56,14 +68,20 @@ namespace JamrahPOS.ViewModels
             IsLoading = true;
             try
             {
+                Console.WriteLine("[USERS] Loading users...");
                 var users = await _context.Users
                     .OrderBy(u => u.Username)
                     .ToListAsync();
 
+                Console.WriteLine($"[USERS] Retrieved {users.Count} users from database");
                 Users = new ObservableCollection<User>(users);
+                Console.WriteLine("[USERS] Users loaded successfully");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[USERS] ERROR loading users: {ex.Message}");
+                Console.WriteLine($"[USERS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[USERS] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في تحميل المستخدمين: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

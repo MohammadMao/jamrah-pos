@@ -57,15 +57,27 @@ namespace JamrahPOS.ViewModels
 
         public MenuItemsViewModel()
         {
-            _context = new PosDbContext();
+            try
+            {
+                Console.WriteLine("[MENUITEMS] MenuItemsViewModel constructor started");
+                _context = new PosDbContext();
 
-            AddMenuItemCommand = new RelayCommand(_ => AddMenuItem());
-            EditMenuItemCommand = new RelayCommand(param => EditMenuItem(param as MenuItem));
-            ToggleActiveCommand = new RelayCommand(async param => await ToggleActiveAsync(param as MenuItem));
-            DeleteMenuItemCommand = new RelayCommand(async param => await DeleteMenuItemAsync(param as MenuItem));
-            RefreshCommand = new RelayCommand(async _ => await LoadMenuItemsAsync());
+                AddMenuItemCommand = new RelayCommand(_ => AddMenuItem());
+                EditMenuItemCommand = new RelayCommand(param => EditMenuItem(param as MenuItem));
+                ToggleActiveCommand = new RelayCommand(async param => await ToggleActiveAsync(param as MenuItem));
+                DeleteMenuItemCommand = new RelayCommand(async param => await DeleteMenuItemAsync(param as MenuItem));
+                RefreshCommand = new RelayCommand(async _ => await LoadMenuItemsAsync());
 
-            _ = LoadDataAsync();
+                _ = LoadDataAsync();
+                Console.WriteLine("[MENUITEMS] MenuItemsViewModel initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MENUITEMS] CRITICAL ERROR in constructor: {ex.Message}");
+                Console.WriteLine($"[MENUITEMS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MENUITEMS] Inner exception: {ex.InnerException?.Message}");
+                throw;
+            }
         }
 
         private async Task LoadDataAsync()
@@ -73,15 +85,21 @@ namespace JamrahPOS.ViewModels
             IsLoading = true;
             try
             {
+                Console.WriteLine("[MENUITEMS] LoadDataAsync started");
                 var categories = await _context.Categories
                     .OrderBy(c => c.Name)
                     .ToListAsync();
+                Console.WriteLine($"[MENUITEMS] Loaded {categories.Count} categories");
                 Categories = new ObservableCollection<Category>(categories);
 
                 await LoadMenuItemsAsync();
+                Console.WriteLine("[MENUITEMS] LoadDataAsync completed successfully");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[MENUITEMS] ERROR in LoadDataAsync: {ex.Message}");
+                Console.WriteLine($"[MENUITEMS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MENUITEMS] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في تحميل البيانات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -95,6 +113,7 @@ namespace JamrahPOS.ViewModels
             IsLoading = true;
             try
             {
+                Console.WriteLine($"[MENUITEMS] LoadMenuItemsAsync started - Category: {SelectedCategory?.Name ?? "All"}");
                 var query = _context.MenuItems
                     .Include(m => m.Category)
                     .AsQueryable();
@@ -108,10 +127,14 @@ namespace JamrahPOS.ViewModels
                     .OrderBy(m => m.Name)
                     .ToListAsync();
 
+                Console.WriteLine($"[MENUITEMS] Loaded {menuItems.Count} menu items");
                 MenuItems = new ObservableCollection<MenuItem>(menuItems);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[MENUITEMS] ERROR in LoadMenuItemsAsync: {ex.Message}");
+                Console.WriteLine($"[MENUITEMS] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MENUITEMS] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في تحميل الأصناف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

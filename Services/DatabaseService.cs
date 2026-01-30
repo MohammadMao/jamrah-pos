@@ -26,15 +26,13 @@ namespace JamrahPOS.Services
             {
                 Console.WriteLine("[DB] Starting database initialization...");
 
-                // Ensure database is created
-                bool created = await _context.Database.EnsureCreatedAsync();
-                Console.WriteLine($"[DB] Database created/exists: {created}");
+                // Use migrations to create/update database schema
+                Console.WriteLine("[DB] Applying migrations...");
+                await _context.Database.MigrateAsync();
+                Console.WriteLine("[DB] Migrations applied successfully");
 
-                // Seed initial data if database was just created
+                // Seed initial data
                 await SeedDataAsync();
-
-                // Alternative: Use migrations (uncomment if using migrations)
-                // await _context.Database.MigrateAsync();
 
                 Console.WriteLine("[DB] Database initialized successfully.");
             }
