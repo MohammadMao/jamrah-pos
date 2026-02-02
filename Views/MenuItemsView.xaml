@@ -76,46 +76,57 @@
         <!-- Menu Items List -->
         <Border Grid.Row="1" Background="White" Margin="10,5,10,10">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding MenuItems}" Padding="20">
+                <ItemsControl ItemsSource="{Binding MenuItems}" Padding="10">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Background="White" 
                                     BorderBrush="#E0E0E0" 
                                     BorderThickness="1" 
                                     CornerRadius="5" 
-                                    Padding="20" 
-                                    Margin="0,0,0,15">
+                                    Padding="15" 
+                                    Margin="10"
+                                    Width="180"
+                                    Height="220">
                                 <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
                                     <!-- Item Info -->
-                                    <StackPanel Grid.Column="0" FlowDirection="RightToLeft">
+                                    <StackPanel Grid.Row="0" FlowDirection="RightToLeft" VerticalAlignment="Top">
                                         <TextBlock Text="{Binding Name}" 
-                                                   FontSize="20" 
+                                                   FontSize="15" 
                                                    FontWeight="Bold" 
+                                                   TextWrapping="Wrap"
+                                                   TextAlignment="Center"
+                                                   MaxHeight="40"
                                                    Margin="0,0,0,8"/>
                                         
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="التصنيف: " FontSize="14" Foreground="#666666"/>
-                                            <TextBlock Text="{Binding Category.Name}" FontSize="14" FontWeight="SemiBold" Foreground="#2196F3"/>
-                                        </StackPanel>
+                                        <TextBlock Text="{Binding Category.Name}" 
+                                                   FontSize="11" 
+                                                   Foreground="#666666"
+                                                   TextAlignment="Center"
+                                                   Margin="0,0,0,8"/>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="السعر: " FontSize="16" Foreground="#666666"/>
-                                            <TextBlock Text="{Binding Price, StringFormat='{}{0:N2}'}" 
-                                                       FontSize="18" 
-                                                       FontWeight="Bold" 
-                                                       Foreground="#4CAF50"/>
-                                            <TextBlock Text=" ريال" FontSize="16" Foreground="#666666" Margin="5,0,0,0"/>
-                                        </StackPanel>
+                                        <TextBlock HorizontalAlignment="Center" Margin="0,5">
+                                            <Run Text="{Binding Price, StringFormat='{}{0:N2}'}" 
+                                                 FontSize="18" 
+                                                 FontWeight="Bold" 
+                                                 Foreground="#4CAF50"/>
+                                            <Run Text=" جنيه" FontSize="13" Foreground="#666666"/>
+                                        </TextBlock>
 
                                         <!-- Status Badge -->
-                                        <Border Padding="8,4"
+                                        <Border Padding="6,3"
                                                 CornerRadius="3"
-                                                HorizontalAlignment="Right">
+                                                HorizontalAlignment="Center"
+                                                Margin="0,8,0,0">
                                             <Border.Style>
                                                 <Style TargetType="Border">
                                                     <Setter Property="Background" Value="#4CAF50"/>
@@ -126,7 +137,7 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
+                                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="White">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="نشط"/>
@@ -142,49 +153,55 @@
                                     </StackPanel>
 
                                     <!-- Action Buttons -->
-                                    <StackPanel Grid.Column="1" 
-                                                VerticalAlignment="Center">
-                                        <Button Content="✏️ تعديل"
+                                    <StackPanel Grid.Row="1" 
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Center">
+                                        <Button Content="✏️"
                                                 Command="{Binding DataContext.EditMenuItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}"
                                                 FontSize="14"
-                                                Padding="15,8"
+                                                Padding="8,5"
                                                 Background="#2196F3"
                                                 Foreground="White"
                                                 BorderThickness="0"
                                                 Cursor="Hand"
-                                                Margin="0,0,0,8"/>
+                                                ToolTip="تعديل"
+                                                Margin="2"/>
 
-                                        <Button Content="{Binding IsActive, Converter={StaticResource BoolToString}, ConverterParameter='تعطيل|تفعيل'}"
+                                        <Button Content="{Binding IsActive, Converter={StaticResource BoolToString}, ConverterParameter='🚫|✅'}"
                                                 Command="{Binding DataContext.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}"
                                                 FontSize="14"
-                                                Padding="15,8"
+                                                Padding="8,5"
                                                 Foreground="White"
                                                 BorderThickness="0"
                                                 Cursor="Hand"
-                                                Margin="0,0,0,8">
+                                                Margin="2">
                                             <Button.Style>
                                                 <Style TargetType="Button">
                                                     <Setter Property="Background" Value="#F44336"/>
+                                                    <Setter Property="ToolTip" Value="تعطيل"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsActive}" Value="False">
                                                             <Setter Property="Background" Value="#4CAF50"/>
+                                                            <Setter Property="ToolTip" Value="تفعيل"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Button.Style>
                                         </Button>
 
-                                        <Button Content="🗑️ حذف"
+                                        <Button Content="🗑️"
                                                 Command="{Binding DataContext.DeleteMenuItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}"
                                                 FontSize="14"
-                                                Padding="15,8"
-                                                Background="#9E9E9E"
+                                                Padding="8,5"
+                                                Background="#757575"
                                                 Foreground="White"
                                                 BorderThickness="0"
-                                                Cursor="Hand"/>
+                                                Cursor="Hand"
+                                                ToolTip="حذف"
+                                                Margin="2"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>

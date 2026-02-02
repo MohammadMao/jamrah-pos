@@ -156,16 +156,6 @@
                                                 </Style>
                                             </Button.Style>
                                         </Button>
-
-                                        <Button Content="🔑 إعادة تعيين"
-                                                Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                CommandParameter="{Binding}"
-                                                FontSize="14"
-                                                Padding="15,8"
-                                                Background="#FF9800"
-                                                Foreground="White"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>

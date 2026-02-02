@@ -96,12 +96,12 @@
                                         <Grid Grid.Row="1" Margin="0,5,0,0">
                                             <TextBlock HorizontalAlignment="Left">
                                                 <Run Text="{Binding UnitPrice, StringFormat='{}{0:N2}'}" FontSize="13" Foreground="#666666"/>
-                                                <Run Text=" ريال" FontSize="13" Foreground="#666666"/>
+                                                <Run Text=" جنيه" FontSize="13" Foreground="#666666"/>
                                             </TextBlock>
                                             <TextBlock HorizontalAlignment="Right">
                                                 <Run Text="المجموع: " FontSize="13" FontWeight="SemiBold" Foreground="#4CAF50"/>
                                                 <Run Text="{Binding TotalPrice, StringFormat='{}{0:N2}'}" FontSize="13" FontWeight="Bold" Foreground="#4CAF50"/>
-                                                <Run Text=" ريال" FontSize="13" FontWeight="SemiBold" Foreground="#4CAF50"/>
+                                                <Run Text=" جنيه" FontSize="13" FontWeight="SemiBold" Foreground="#4CAF50"/>
                                             </TextBlock>
                                         </Grid>
                                     </Grid>
@@ -122,7 +122,7 @@
             <Grid>
                 <TextBlock Text="الإجمالي" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
                 <TextBlock x:Name="TotalAmountText" 
-                           Text="0.00 ريال" 
+                           Text="0.00 جنيه" 
                            FontSize="24" 
                            FontWeight="Bold" 
                            Foreground="#FF6F00" 
@@ -130,16 +130,35 @@
             </Grid>
         </Border>
 
-        <!-- Close Button -->
-        <Button Grid.Row="4"
-                Content="إغلاق"
-                FontSize="16"
-                FontWeight="Bold"
-                Padding="0,15"
-                Background="#2196F3"
-                Foreground="White"
-                BorderThickness="0"
-                Cursor="Hand"
-                Click="Close_Click"/>
+        <!-- Action Buttons -->
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Content="🖨 طباعة"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Padding="0,15"
+                    Background="#4CAF50"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="Print_Click"/>
+
+            <Button Grid.Column="2"
+                    Content="إغلاق"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Padding="0,15"
+                    Background="#2196F3"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="Close_Click"/>
+        </Grid>
     </Grid>
 </Window>

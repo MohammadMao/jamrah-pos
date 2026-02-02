@@ -9,6 +9,7 @@
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <converters:EqualToVisibilityConverter x:Key="EqualToVisibilityConverter"/>
         <converters:CurrencyConverter x:Key="CurrencyConverter"/>
+        <converters:BoolToStringConverter x:Key="BoolToString"/>
         
         <!-- Global Resources and Styles -->
     </Application.Resources>

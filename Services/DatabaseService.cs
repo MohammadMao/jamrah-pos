@@ -52,25 +52,10 @@ namespace JamrahPOS.Services
             try
             {
                 // Check if admin user exists
-                // Check if admin user exists
                 var adminExists = await _context.Users.AnyAsync(u => u.Username == "admin");
                 if (adminExists)
                 {
-                    Console.WriteLine("[DB] Admin user already exists. Verifying password...");
-                    var existingAdmin = await _context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
-                    if (existingAdmin != null)
-                    {
-                        bool passwordMatches = AuthenticationService.VerifyPassword("admin123", existingAdmin.PasswordHash);
-                        Console.WriteLine($"[DB] Existing admin password matches default: {passwordMatches}");
-                        if (!passwordMatches)
-                        {
-                            Console.WriteLine("[DB] Updating admin password hash to default 'admin123'");
-                            existingAdmin.PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123", workFactor: 11);
-                            _context.Users.Update(existingAdmin);
-                            await _context.SaveChangesAsync();
-                            Console.WriteLine("[DB] Admin password updated");
-                        }
-                    }
+                    Console.WriteLine("[DB] Admin user already exists. Skipping seed data.");
                 }
                 else
                 {

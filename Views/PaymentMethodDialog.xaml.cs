@@ -13,7 +13,7 @@ namespace JamrahPOS.Views
         public PaymentMethodDialog(decimal totalAmount)
         {
             InitializeComponent();
-            TotalAmountText.Text = $"{totalAmount:N2} ريال";
+            TotalAmountText.Text = $"{totalAmount:N2} جنيه";
         }
 
         private void Confirm_Click(object sender, RoutedEventArgs e)

@@ -156,13 +156,20 @@ namespace JamrahPOS.Services
         }
 
         /// <summary>
-        /// Generates a unique order number
+        /// Generates a unique order number with daily incrementing counter
         /// </summary>
         private string GenerateOrderNumber()
         {
-            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-            var random = new Random().Next(1000, 9999);
-            return $"ORD-{timestamp}-{random}";
+            var today = DateTime.Today;
+            var todayString = today.ToString("yyyyMMdd");
+            
+            // Count orders created today
+            var todayOrderCount = _context.Orders
+                .Where(o => o.OrderDateTime >= today && o.OrderDateTime < today.AddDays(1))
+                .Count();
+            
+            var dailyNumber = todayOrderCount + 1;
+            return $"{todayString}-{dailyNumber}";
         }
 
         /// <summary>

@@ -51,6 +51,7 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
@@ -82,28 +83,25 @@
                                     <Setter Property="FlowDirection" Value="RightToLeft"/>
                                 </Style>
                             </ComboBox.ItemContainerStyle>
-                            <ComboBox.Style>
-                                <Style TargetType="ComboBox">
-                                    <Style.Triggers>
-                                        <Trigger Property="SelectedItem" Value="{x:Null}">
-                                            <Setter Property="Background" Value="White"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ComboBox.Style>
                         </ComboBox>
                     </StackPanel>
 
                     <!-- Payment Method Filter -->
                     <StackPanel Grid.Column="3" Margin="0,0,15,0">
                         <TextBlock Text="طريقة الدفع" FontSize="12" Margin="0,0,0,5"/>
-                        <ComboBox SelectedItem="{Binding SelectedPaymentMethod}" 
+                        <ComboBox SelectedValue="{Binding SelectedPaymentMethod}" 
+                                  SelectedValuePath="Tag"
                                   FontSize="14" 
                                   Width="140">
-                            <ComboBoxItem Content="الكل"/>
-                            <ComboBoxItem Content="نقداً"/>
-                            <ComboBoxItem Content="بطاقة"/>
-                            <ComboBoxItem Content="تحويل بنكي"/>
+                            <ComboBoxItem Content="الكل" Tag="الكل"/>
+                            <ComboBoxItem Content="نقداً" Tag="نقداً"/>
+                            <ComboBoxItem Content="بطاقة" Tag="بطاقة"/>
+                            <ComboBoxItem Content="تحويل بنكي" Tag="تحويل بنكي"/>
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="FlowDirection" Value="RightToLeft"/>
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
                         </ComboBox>
                     </StackPanel>
 
@@ -114,73 +112,150 @@
                                   FontSize="14"
                                   FlowDirection="RightToLeft"/>
                     </StackPanel>
+
+                    <!-- Search and Reset Buttons -->
+                    <StackPanel Grid.Column="5" Margin="0,0,0,0" VerticalAlignment="Bottom" Orientation="Horizontal">
+                        <Button Content="🔍 بحث"
+                                Command="{Binding SearchCommand}"
+                                FontSize="14"
+                                FontWeight="Bold"
+                                Padding="20,8"
+                                Background="#4CAF50"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Margin="0,0,10,0"/>
+                        <Button Content="🔄 إلغاء الفلترة"
+                                Command="{Binding ResetFiltersCommand}"
+                                FontSize="14"
+                                FontWeight="Bold"
+                                Padding="20,8"
+                                Background="#FF9800"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"/>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </Border>
 
         <!-- Orders List -->
         <Border Grid.Row="1" Background="White" Margin="10,5,10,10">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Orders}" Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Orders Count -->
+                <TextBlock Grid.Row="0" 
+                           Margin="15,15,15,10"
+                           FontSize="14" 
+                           Foreground="#666666"
+                           FlowDirection="RightToLeft">
+                    <Run Text="عدد الطلبات: "/>
+                    <Run Text="{Binding TotalOrders}" FontWeight="Bold"/>
+                    <Run Text=" | الصفحة "/>
+                    <Run Text="{Binding CurrentPage}" FontWeight="Bold"/>
+                    <Run Text=" من "/>
+                    <Run Text="{Binding TotalPages}" FontWeight="Bold"/>
+                </TextBlock>
+
+                <!-- Orders List ScrollViewer -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Header Row -->
+                        <Border Background="#F5F5F5" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="0,0,0,2" 
+                                Padding="10,8">
+                            <Grid FlowDirection="RightToLeft">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="رقم الطلب" FontSize="12" FontWeight="Bold" Foreground="#333"/>
+                                <TextBlock Grid.Column="1" Text="التاريخ والوقت" FontSize="12" FontWeight="Bold" Foreground="#333"/>
+                                <TextBlock Grid.Column="2" Text="الكاشير" FontSize="12" FontWeight="Bold" Foreground="#333"/>
+                                <TextBlock Grid.Column="3" Text="طريقة الدفع" FontSize="12" FontWeight="Bold" Foreground="#333"/>
+                                <TextBlock Grid.Column="4" Text="الإجمالي" FontSize="12" FontWeight="Bold" Foreground="#333"/>
+                                <TextBlock Grid.Column="5" Text="الحالة" FontSize="12" FontWeight="Bold" Foreground="#333" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="6" Text="الإجراءات" FontSize="12" FontWeight="Bold" Foreground="#333"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Orders List -->
+                        <ItemsControl ItemsSource="{Binding Orders}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Background="White" 
                                     BorderBrush="#E0E0E0" 
-                                    BorderThickness="1" 
-                                    CornerRadius="5" 
-                                    Padding="15" 
-                                    Margin="0,0,0,10">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
+                                    BorderThickness="0,0,0,1" 
+                                    Padding="10,8" 
+                                    Margin="0">
+                                <Grid FlowDirection="RightToLeft">
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="70"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Order Info -->
-                                    <StackPanel Grid.Row="0" Grid.Column="0" FlowDirection="RightToLeft">
-                                        <TextBlock FontSize="18" FontWeight="Bold" Margin="0,0,0,8">
-                                            <Run Text="رقم الطلب: "/>
-                                            <Run Text="{Binding OrderNumber}" Foreground="#2196F3"/>
-                                        </TextBlock>
+                                    <!-- Order Number -->
+                                    <TextBlock Grid.Column="0" 
+                                               FontSize="13" 
+                                               FontWeight="Bold" 
+                                               Foreground="#2196F3"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding OrderNumber}"/>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="📅 " FontSize="14"/>
-                                            <TextBlock Text="{Binding OrderDateTime, StringFormat='yyyy/MM/dd - HH:mm:ss'}" 
-                                                       FontSize="14" 
-                                                       Foreground="#666666"/>
-                                        </StackPanel>
+                                    <!-- Date Time -->
+                                    <TextBlock Grid.Column="1" 
+                                               FontSize="12" 
+                                               Foreground="#666666"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding OrderDateTime, StringFormat='yyyy/MM/dd HH:mm'}"/>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="👤 " FontSize="14"/>
-                                            <TextBlock Text="{Binding Cashier.Username}" 
-                                                       FontSize="14" 
-                                                       Foreground="#666666"/>
-                                        </StackPanel>
+                                    <!-- Cashier -->
+                                    <TextBlock Grid.Column="2" 
+                                               FontSize="12" 
+                                               Foreground="#666666"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding Cashier.Username}"/>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="💳 " FontSize="14"/>
-                                            <TextBlock Text="{Binding PaymentMethod}" 
-                                                       FontSize="14" 
-                                                       Foreground="#666666"/>
-                                        </StackPanel>
+                                    <!-- Payment Method -->
+                                    <TextBlock Grid.Column="3" 
+                                               FontSize="12" 
+                                               Foreground="#666666"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding PaymentMethod}"/>
 
-                                        <TextBlock FontSize="20" FontWeight="Bold" Foreground="#4CAF50" Margin="0,8,0,0">
-                                            <Run Text="الإجمالي: "/>
-                                            <Run Text="{Binding TotalAmount, StringFormat='{}{0:N2}'}"/>
-                                            <Run Text=" ريال"/>
-                                        </TextBlock>
-                                    </StackPanel>
+                                    <!-- Total Amount -->
+                                    <TextBlock Grid.Column="4" 
+                                               FontSize="13" 
+                                               FontWeight="Bold" 
+                                               Foreground="#4CAF50"
+                                               VerticalAlignment="Center">
+                                        <Run Text="{Binding TotalAmount, StringFormat='{}{0:N2}'}"/>
+                                        <Run Text=" جنيه"/>
+                                    </TextBlock>
 
                                     <!-- Status Badge -->
-                                    <Border Grid.Row="0" Grid.Column="1" 
-                                            VerticalAlignment="Top"
-                                            Padding="10,5"
-                                            CornerRadius="3"
-                                            Margin="0,0,0,10">
+                                    <Border Grid.Column="5" 
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            Padding="8,3"
+                                            CornerRadius="3">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="#4CAF50"/>
@@ -191,7 +266,7 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock FontSize="12" FontWeight="Bold" Foreground="White">
+                                        <TextBlock FontSize="10" FontWeight="Bold" Foreground="White">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Text" Value="نشط"/>
@@ -206,30 +281,33 @@
                                     </Border>
 
                                     <!-- Action Buttons -->
-                                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                    <StackPanel Grid.Column="6" 
                                                 Orientation="Horizontal" 
                                                 HorizontalAlignment="Left"
-                                                Margin="0,10,0,0">
-                                        <Button Content="📋 عرض التفاصيل"
+                                                VerticalAlignment="Center"
+                                                Margin="10,0,0,0">
+                                        <Button Content="📋"
                                                 Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}"
-                                                FontSize="14"
-                                                Padding="15,8"
+                                                FontSize="12"
+                                                Padding="8,4"
                                                 Background="#2196F3"
                                                 Foreground="White"
                                                 BorderThickness="0"
                                                 Cursor="Hand"
-                                                Margin="0,0,10,0"/>
+                                                ToolTip="عرض التفاصيل"
+                                                Margin="0,0,5,0"/>
 
-                                        <Button Content="❌ إلغاء الطلب"
+                                        <Button Content="❌"
                                                 Command="{Binding DataContext.VoidOrderCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}"
-                                                FontSize="14"
-                                                Padding="15,8"
+                                                FontSize="12"
+                                                Padding="8,4"
                                                 Background="#F44336"
                                                 Foreground="White"
                                                 BorderThickness="0"
-                                                Cursor="Hand">
+                                                Cursor="Hand"
+                                                ToolTip="إلغاء الطلب">
                                             <Button.Style>
                                                 <Style TargetType="Button">
                                                     <Setter Property="Visibility" Value="Visible"/>
@@ -250,7 +328,79 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                    </StackPanel>
             </ScrollViewer>
+
+            <!-- Pagination Controls -->
+            <Border Grid.Row="2" 
+                    Background="#F5F5F5" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="0,1,0,0"
+                    Padding="15">
+                <StackPanel Orientation="Horizontal" 
+                            HorizontalAlignment="Center"
+                            FlowDirection="LeftToRight">
+                    
+                    <!-- Previous Button -->
+                    <Button Content="◄ السابق"
+                            Command="{Binding PreviousPageCommand}"
+                            FontSize="14"
+                            Padding="15,8"
+                            Background="#2196F3"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Margin="0,0,10,0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Opacity" Value="1"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.5"/>
+                                        <Setter Property="Cursor" Value="Arrow"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- Page Numbers -->
+                    <TextBlock FontSize="16" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Margin="10,0"
+                               FlowDirection="RightToLeft">
+                        <Run Text="صفحة "/>
+                        <Run Text="{Binding CurrentPage}"/>
+                        <Run Text=" / "/>
+                        <Run Text="{Binding TotalPages}"/>
+                    </TextBlock>
+
+                    <!-- Next Button -->
+                    <Button Content="التالي ►"
+                            Command="{Binding NextPageCommand}"
+                            FontSize="14"
+                            Padding="15,8"
+                            Background="#2196F3"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Margin="10,0,0,0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Opacity" Value="1"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.5"/>
+                                        <Setter Property="Cursor" Value="Arrow"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Border>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

@@ -6,7 +6,7 @@
         Width="450"
         WindowStartupLocation="CenterOwner"
         WindowStyle="SingleBorderWindow"
-        ResizeMode="NoResize"
+        ResizeMode="CanMinimize"
         FlowDirection="RightToLeft"
         Background="#F5F5F5"
         FontFamily="Arial">

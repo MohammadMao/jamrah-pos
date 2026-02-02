@@ -139,6 +139,7 @@ namespace JamrahPOS.ViewModels
                 {
                     Console.WriteLine("[LOGIN] Authentication failed - invalid credentials");
                     ErrorMessage = "اسم المستخدم أو كلمة المرور غير صحيحة"; // Invalid username or password
+                    MessageBox.Show("اسم المستخدم أو كلمة المرور غير صحيحة", "خطأ في تسجيل الدخول", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)

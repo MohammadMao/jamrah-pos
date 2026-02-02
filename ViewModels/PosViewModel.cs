@@ -156,7 +156,6 @@ namespace JamrahPOS.ViewModels
 
             // Show quantity dialog
             var dialog = new Views.QuantityDialog(menuItem.Name, menuItem.Price);
-            dialog.Owner = Application.Current.MainWindow;
             
             if (dialog.ShowDialog() == true)
             {
@@ -188,7 +187,6 @@ namespace JamrahPOS.ViewModels
 
             // Show edit dialog
             var dialog = new Views.EditItemDialog(item);
-            dialog.Owner = Application.Current.MainWindow;
 
             if (dialog.ShowDialog() == true)
             {
@@ -231,7 +229,6 @@ namespace JamrahPOS.ViewModels
 
             // Show payment method dialog
             var paymentDialog = new Views.PaymentMethodDialog(TotalAmount);
-            paymentDialog.Owner = Application.Current.MainWindow;
 
             if (paymentDialog.ShowDialog() != true)
             {
@@ -271,7 +268,7 @@ namespace JamrahPOS.ViewModels
                 }
 
                 MessageBox.Show(
-                    $"تم حفظ الطلب بنجاح\nرقم الطلب: {order.OrderNumber}\nالإجمالي: {order.TotalAmount:N2} ريال",
+                    $"تم حفظ الطلب بنجاح\nرقم الطلب: {order.OrderNumber}\nالإجمالي: {order.TotalAmount:N2} جنيه",
                     "نجاح",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);

@@ -6,7 +6,7 @@
         Width="450"
         WindowStartupLocation="CenterOwner"
         WindowStyle="SingleBorderWindow"
-        ResizeMode="NoResize"
+        ResizeMode="CanMinimize"
         FlowDirection="RightToLeft"
         Background="#F5F5F5"
         FontFamily="Arial">
@@ -45,10 +45,29 @@
             <TextBlock FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5">
                 <Run x:Name="PasswordLabelText" Text="كلمة المرور *"/>
             </TextBlock>
-            <PasswordBox x:Name="PasswordBox" 
-                         FontSize="16" 
-                         Padding="10"
-                         PasswordChanged="PasswordBox_PasswordChanged"/>
+            <Grid>
+                <PasswordBox x:Name="PasswordBox" 
+                             FontSize="16" 
+                             Padding="10,10,50,10"
+                             PasswordChanged="PasswordBox_PasswordChanged"/>
+                <TextBox x:Name="PasswordTextBox"
+                         FontSize="16"
+                         Padding="10,10,50,10"
+                         Visibility="Collapsed"
+                         TextChanged="PasswordTextBox_TextChanged"/>
+                <Button x:Name="TogglePasswordButton"
+                        Content="👁"
+                        FontSize="16"
+                        Width="35"
+                        Height="35"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,5,0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Click="TogglePassword_Click"/>
+            </Grid>
             <TextBlock x:Name="PasswordHintText" 
                        Text="اترك فارغاً للإبقاء على كلمة المرور الحالية" 
                        FontSize="11" 

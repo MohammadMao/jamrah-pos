@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using JamrahPOS.Data;
@@ -32,6 +33,7 @@ namespace JamrahPOS.ViewModels
         public ICommand AddCategoryCommand { get; }
         public ICommand EditCategoryCommand { get; }
         public ICommand ToggleActiveCommand { get; }
+        public ICommand DeleteCategoryCommand { get; }
         public ICommand RefreshCommand { get; }
 
         public CategoriesViewModel()
@@ -44,6 +46,7 @@ namespace JamrahPOS.ViewModels
                 AddCategoryCommand = new RelayCommand(_ => AddCategory());
                 EditCategoryCommand = new RelayCommand(param => EditCategory(param as Category));
                 ToggleActiveCommand = new RelayCommand(async param => await ToggleActiveAsync(param as Category));
+                DeleteCategoryCommand = new RelayCommand(async param => await DeleteCategoryAsync(param as Category));
                 RefreshCommand = new RelayCommand(async _ => await LoadCategoriesAsync());
 
                 Console.WriteLine("[CATEGORIES] Commands initialized, loading categories...");
@@ -88,8 +91,6 @@ namespace JamrahPOS.ViewModels
         private void AddCategory()
         {
             var dialog = new Views.CategoryDialog();
-            dialog.Owner = Application.Current.MainWindow;
-
             if (dialog.ShowDialog() == true)
             {
                 _ = SaveCategoryAsync(null, dialog.CategoryName, dialog.IsActiveStatus);
@@ -101,8 +102,6 @@ namespace JamrahPOS.ViewModels
             if (category == null) return;
 
             var dialog = new Views.CategoryDialog(category);
-            dialog.Owner = Application.Current.MainWindow;
-
             if (dialog.ShowDialog() == true)
             {
                 _ = SaveCategoryAsync(category, dialog.CategoryName, dialog.IsActiveStatus);
@@ -177,6 +176,78 @@ namespace JamrahPOS.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"خطأ في {action} التصنيف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task DeleteCategoryAsync(Category? category)
+        {
+            if (category == null) return;
+
+            var result = MessageBox.Show(
+                $"هل تريد حذف التصنيف '{category.Name}'؟\n\nملاحظة: الأصناف الموجودة في هذا التصنيف لن يتم حذفها.",
+                "تأكيد الحذف",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                IsLoading = true;
+
+                // Load the category with its menu items
+                var categoryToDelete = await _context.Categories
+                    .Include(c => c.MenuItems)
+                    .FirstOrDefaultAsync(c => c.Id == category.Id);
+
+                if (categoryToDelete == null)
+                {
+                    MessageBox.Show("لم يتم العثور على التصنيف", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // If there are menu items in this category, we need to handle them
+                if (categoryToDelete.MenuItems.Any())
+                {
+                    // Find or create an "Uncategorized" category
+                    var uncategorized = await _context.Categories
+                        .FirstOrDefaultAsync(c => c.Name == "غير مصنف");
+
+                    if (uncategorized == null)
+                    {
+                        uncategorized = new Category
+                        {
+                            Name = "غير مصنف",
+                            IsActive = true
+                        };
+                        _context.Categories.Add(uncategorized);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    // Move all menu items to uncategorized
+                    foreach (var item in categoryToDelete.MenuItems)
+                    {
+                        item.CategoryId = uncategorized.Id;
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                // Now delete the category
+                _context.Categories.Remove(categoryToDelete);
+                await _context.SaveChangesAsync();
+
+                MessageBox.Show("تم حذف التصنيف بنجاح", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await LoadCategoriesAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"خطأ في حذف التصنيف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

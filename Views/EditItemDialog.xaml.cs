@@ -23,7 +23,7 @@ namespace JamrahPOS.Views
             Quantity = item.Quantity;
             UnitPrice = item.UnitPrice;
 
-            OriginalPriceText.Text = $"السعر الأصلي: {_originalPrice:N2} ريال";
+            OriginalPriceText.Text = $"السعر الأصلي: {_originalPrice:N2} جنيه";
             QuantityTextBox.Text = Quantity.ToString();
             PriceTextBox.Text = UnitPrice.ToString("F2");
 
@@ -101,7 +101,7 @@ namespace JamrahPOS.Views
                 {
                     decimal discount = _originalPrice - currentPrice;
                     decimal discountPercentage = (_originalPrice > 0) ? (discount / _originalPrice) * 100 : 0;
-                    DiscountText.Text = $"خصم: {discount:N2} ريال ({discountPercentage:N1}%)";
+                    DiscountText.Text = $"خصم: {discount:N2} جنيه ({discountPercentage:N1}%)";
                     DiscountText.Visibility = Visibility.Visible;
                 }
                 else

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using JamrahPOS.Data;
@@ -90,7 +91,18 @@ namespace JamrahPOS.ViewModels
                     .OrderBy(c => c.Name)
                     .ToListAsync();
                 Console.WriteLine($"[MENUITEMS] Loaded {categories.Count} categories");
-                Categories = new ObservableCollection<Category>(categories);
+                
+                // Create a list with "All" category at the beginning
+                var categoriesWithAll = new List<Category>
+                {
+                    new Category { Id = 0, Name = "الكل" } // "All" category
+                };
+                categoriesWithAll.AddRange(categories);
+                
+                Categories = new ObservableCollection<Category>(categoriesWithAll);
+                
+                // Set "All" as default selection
+                SelectedCategory = Categories.FirstOrDefault();
 
                 await LoadMenuItemsAsync();
                 Console.WriteLine("[MENUITEMS] LoadDataAsync completed successfully");
@@ -118,7 +130,8 @@ namespace JamrahPOS.ViewModels
                     .Include(m => m.Category)
                     .AsQueryable();
 
-                if (SelectedCategory != null)
+                // Filter by category only if it's not the "All" category (Id = 0)
+                if (SelectedCategory != null && SelectedCategory.Id > 0)
                 {
                     query = query.Where(m => m.CategoryId == SelectedCategory.Id);
                 }
@@ -153,8 +166,6 @@ namespace JamrahPOS.ViewModels
             }
 
             var dialog = new Views.MenuItemDialog(categories);
-            dialog.Owner = Application.Current.MainWindow;
-
             if (dialog.ShowDialog() == true)
             {
                 _ = SaveMenuItemAsync(null, dialog.ItemName, dialog.Price, dialog.CategoryId, dialog.IsActiveStatus);
@@ -167,8 +178,6 @@ namespace JamrahPOS.ViewModels
 
             var categories = Categories.ToList();
             var dialog = new Views.MenuItemDialog(categories, menuItem);
-            dialog.Owner = Application.Current.MainWindow;
-
             if (dialog.ShowDialog() == true)
             {
                 _ = SaveMenuItemAsync(menuItem, dialog.ItemName, dialog.Price, dialog.CategoryId, dialog.IsActiveStatus);
