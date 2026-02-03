@@ -52,23 +52,19 @@ namespace JamrahPOS.Services
             try
             {
                 // Check if admin user exists
-                var adminExists = await _context.Users.AnyAsync(u => u.Username == "admin");
-                if (adminExists)
+                var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
+                
+                if (adminUser == null)
                 {
-                    Console.WriteLine("[DB] Admin user already exists. Skipping seed data.");
-                }
-                else
-                {
-                    Console.WriteLine("[DB] Seeding initial data...");
+                    Console.WriteLine("[DB] Admin user not found. Creating admin user...");
 
                     // Generate a fresh BCrypt hash for "admin123"
                     string passwordHash = BCrypt.Net.BCrypt.HashPassword("admin123", workFactor: 11);
                     Console.WriteLine($"[DB] Generated password hash: {passwordHash}");
 
-                    // Seed admin user
-                    var adminUser = new Models.User
+                    // Create admin user
+                    adminUser = new Models.User
                     {
-                        Id = 1,
                         Username = "admin",
                         PasswordHash = passwordHash,
                         Role = "Admin",
@@ -76,24 +72,40 @@ namespace JamrahPOS.Services
                     };
 
                     _context.Users.Add(adminUser);
-                    Console.WriteLine("[DB] Added admin user");
-
-                // Seed categories
-                var categories = new[]
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("[DB] Admin user created successfully");
+                }
+                else
                 {
-                    new Models.Category { Id = 1, Name = "المشروبات" },     // Drinks
-                    new Models.Category { Id = 2, Name = "المقبلات" },      // Appetizers
-                    new Models.Category { Id = 3, Name = "الأطباق الرئيسية" }, // Main Dishes
-                    new Models.Category { Id = 4, Name = "الحلويات" }       // Desserts
-                };
+                    Console.WriteLine("[DB] Admin user already exists. Skipping.");
+                }
 
-                _context.Categories.AddRange(categories);
-                Console.WriteLine("[DB] Added sample categories");
+                // Check if categories exist, if not seed them
+                var categoriesExist = await _context.Categories.AnyAsync();
+                if (!categoriesExist)
+                {
+                    Console.WriteLine("[DB] No categories found. Seeding categories...");
+                    // Seed categories
+                    var categories = new[]
+                    {
+                        new Models.Category { Name = "المشروبات", IsActive = true },     // Drinks
+                        new Models.Category { Name = "المقبلات", IsActive = true },      // Appetizers
+                        new Models.Category { Name = "الأطباق الرئيسية", IsActive = true }, // Main Dishes
+                        new Models.Category { Name = "الحلويات", IsActive = true }       // Desserts
+                    };
 
-                // Save all changes
-                int saved = await _context.SaveChangesAsync();
-                Console.WriteLine($"[DB] Saved {saved} entities to database");
-            }}
+                    _context.Categories.AddRange(categories);
+                    Console.WriteLine("[DB] Added sample categories");
+                    
+                    // Save all changes
+                    int saved = await _context.SaveChangesAsync();
+                    Console.WriteLine($"[DB] Saved {saved} entities to database");
+                }
+                else
+                {
+                    Console.WriteLine("[DB] Categories already exist. Skipping seed.");
+                }
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"[DB] ERROR seeding data: {ex.Message}");

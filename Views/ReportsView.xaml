@@ -109,7 +109,7 @@
             </Grid.RowDefinitions>
 
             <!-- Loading Indicator -->
-            <Border Background="White" CornerRadius="4" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border Background="White" CornerRadius="4" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="جاري تحميل البيانات..." FontSize="16" Foreground="#666" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                 </StackPanel>

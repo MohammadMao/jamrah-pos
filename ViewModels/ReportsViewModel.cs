@@ -105,10 +105,8 @@ namespace JamrahPOS.ViewModels
                 _startDate = DateTime.Now.AddDays(-30);
                 _endDate = DateTime.Now;
 
-                // Initialize context and service
-                var optionsBuilder = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<PosDbContext>();
-                optionsBuilder.UseSqlite("Data Source=pos.db");
-                var context = new PosDbContext(optionsBuilder.Options);
+                // Initialize context and service - use default PosDbContext without custom options
+                var context = new PosDbContext();
                 _reportService = new ReportService(context);
 
                 RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
@@ -249,7 +247,10 @@ namespace JamrahPOS.ViewModels
         {
             try
             {
-                string filePath = $"Report_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                // Save to Documents folder
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string fileName = $"Report_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                string filePath = Path.Combine(documentsPath, fileName);
 
                 using (var writer = new StreamWriter(filePath))
                 {
