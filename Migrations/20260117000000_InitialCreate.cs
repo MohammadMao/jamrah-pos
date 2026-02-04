@@ -117,21 +117,7 @@ namespace JamrahPOS.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Categories",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 1, "المشروبات" },
-                    { 2, "المقبلات" },
-                    { 3, "الأطباق الرئيسية" },
-                    { 4, "الحلويات" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "IsActive", "PasswordHash", "Role", "Username" },
-                values: new object[] { 1, true, "$2a$11$8K1p/a0dL3LHAkH4v.9tCe8sJlUgz1qJ3x5t6ygWdZKvIYZp3qYXK", "Admin", "admin" });
+            // Seed data removed - handled by DatabaseService.SeedDataAsync()
 
             migrationBuilder.CreateIndex(
                 name: "IX_MenuItems_CategoryId",

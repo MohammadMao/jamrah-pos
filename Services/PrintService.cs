@@ -11,8 +11,9 @@ namespace JamrahPOS.Services
     public class PrintService
     {
         private const string STORE_NAME = "مطعم جمرة";
-        private const string STORE_ADDRESS = "الرياض، المملكة العربية السعودية";
-        private const string STORE_PHONE = "0500000000";
+        private const string STORE_SLOGAN = "أصل الطعم المشوي";
+        private const string STORE_ADDRESS = "الخرطوم بحري";
+        private const string STORE_PHONE = "0912147130";
         private const string RECEIPT_WIDTH = "========================================";
 
         /// <summary>
@@ -25,6 +26,7 @@ namespace JamrahPOS.Services
             // Header
             receipt.AppendLine(RECEIPT_WIDTH);
             receipt.AppendLine(CenterText(STORE_NAME));
+            receipt.AppendLine(CenterText(STORE_SLOGAN));
             receipt.AppendLine(CenterText(STORE_ADDRESS));
             receipt.AppendLine(CenterText($"هاتف: {STORE_PHONE}"));
             receipt.AppendLine(RECEIPT_WIDTH);

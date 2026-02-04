@@ -88,9 +88,10 @@ namespace JamrahPOS.Services
                     // Seed categories
                     var categories = new[]
                     {
+                        new Models.Category { Name = "بيرقر", IsActive = true },         // Burger
                         new Models.Category { Name = "المشروبات", IsActive = true },     // Drinks
-                        new Models.Category { Name = "المقبلات", IsActive = true },      // Appetizers
-                        new Models.Category { Name = "الأطباق الرئيسية", IsActive = true }, // Main Dishes
+                        new Models.Category { Name = "الطلبات", IsActive = true },       // Orders/Dishes
+                        new Models.Category { Name = "السندوتشات", IsActive = true },    // Sandwiches
                         new Models.Category { Name = "الحلويات", IsActive = true }       // Desserts
                     };
 
