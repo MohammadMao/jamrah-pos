@@ -158,7 +158,8 @@ namespace JamrahPOS.ViewModels
 
         private void AddMenuItem()
         {
-            var categories = Categories.ToList();
+            // Get real categories only (exclude the "All" filter option)
+            var categories = Categories.Where(c => c.Id > 0).ToList();
             if (!categories.Any())
             {
                 MessageBox.Show("الرجاء إضافة تصنيف واحد على الأقل أولاً", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -176,7 +177,8 @@ namespace JamrahPOS.ViewModels
         {
             if (menuItem == null) return;
 
-            var categories = Categories.ToList();
+            // Get real categories only (exclude the "All" filter option)
+            var categories = Categories.Where(c => c.Id > 0).ToList();
             var dialog = new Views.MenuItemDialog(categories, menuItem);
             if (dialog.ShowDialog() == true)
             {
