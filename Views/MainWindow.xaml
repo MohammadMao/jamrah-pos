@@ -29,13 +29,21 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Title -->
-                <TextBlock Text="{Binding Title}" 
-                           Grid.Column="0"
-                           FontSize="24" 
-                           FontWeight="Bold"
-                           Foreground="White"
-                           VerticalAlignment="Center"/>
+                <!-- Logo and Title -->
+                <StackPanel Grid.Column="0" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                    <Image Source="/Images/logo.png" 
+                           Height="50" 
+                           Stretch="Uniform"
+                           Margin="0,0,15,0"/>
+                    <TextBlock Text="Jamrah POS" 
+                               FontSize="24" 
+                               FontWeight="Bold"
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
 
                 <!-- User Info and Logout -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
