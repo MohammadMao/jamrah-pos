@@ -42,7 +42,7 @@
 
         <!-- Price Field -->
         <StackPanel Grid.Row="2" Margin="0,0,0,15">
-            <TextBlock Text="السعر (جنيه) *" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBlock Text="السعر (SDG) *" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
             <TextBox x:Name="PriceTextBox" 
                      FontSize="16" 
                      Padding="10"

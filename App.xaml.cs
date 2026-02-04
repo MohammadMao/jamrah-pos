@@ -1,6 +1,8 @@
 using System.Windows;
 using JamrahPOS.Services;
 using System.IO;
+using System.Globalization;
+using System.Threading;
 
 namespace JamrahPOS
 {
@@ -14,6 +16,15 @@ namespace JamrahPOS
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            
+            // Set Arabic culture with SDG currency
+            var culture = new CultureInfo("ar-SD"); // Arabic (Sudan)
+            culture.NumberFormat.CurrencySymbol = "SDG";
+            culture.NumberFormat.CurrencyDecimalDigits = 2;
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
             
             // Add global exception handler
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

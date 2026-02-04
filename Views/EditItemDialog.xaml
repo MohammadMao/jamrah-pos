@@ -60,7 +60,7 @@
                     
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
                         <TextBox x:Name="PriceTextBox" Width="150" Height="45" FontSize="20" FontWeight="Bold" TextAlignment="Center" VerticalContentAlignment="Center" PreviewTextInput="DecimalTextBox_PreviewTextInput" TextChanged="PriceTextBox_TextChanged"/>
-                        <TextBlock Text="جنيه" FontSize="16" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        <TextBlock Text="SDG" FontSize="16" VerticalAlignment="Center" Margin="10,0,0,0"/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="2" x:Name="DiscountText" FontSize="12" Foreground="#F57C00" HorizontalAlignment="Center" FontWeight="SemiBold" FlowDirection="RightToLeft"/>

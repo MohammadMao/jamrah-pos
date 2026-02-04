@@ -119,7 +119,7 @@
                                                  FontSize="18" 
                                                  FontWeight="Bold" 
                                                  Foreground="#4CAF50"/>
-                                            <Run Text=" جنيه" FontSize="13" Foreground="#666666"/>
+                                            <Run Text=" SDG" FontSize="13" Foreground="#666666"/>
                                         </TextBlock>
 
                                         <!-- Status Badge -->

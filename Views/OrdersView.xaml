@@ -248,7 +248,7 @@
                                                Foreground="#4CAF50"
                                                VerticalAlignment="Center">
                                         <Run Text="{Binding TotalAmount, StringFormat='{}{0:N2}'}"/>
-                                        <Run Text=" جنيه"/>
+                                        <Run Text=" SDG"/>
                                     </TextBlock>
 
                                     <!-- Status Badge -->

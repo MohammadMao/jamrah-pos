@@ -79,7 +79,7 @@
                                 <Button Command="{Binding DataContext.AddItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Width="150" Height="150" Margin="5" Background="White" BorderBrush="#E0E0E0" BorderThickness="1" Cursor="Hand">
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" FlowDirection="RightToLeft" Margin="0,0,0,10"/>
-                                        <TextBlock Text="{Binding Price, StringFormat='{}{0:N2} ریال'}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Price, StringFormat='{}{0:N2} SDG'}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                             </DataTemplate>
@@ -128,11 +128,11 @@
                                                 <TextBlock Text="{Binding Quantity}" FontSize="12" Foreground="#666666"/>
                                                 <TextBlock Text=" × " FontSize="12" Foreground="#666666"/>
                                                 <TextBlock Text="{Binding UnitPrice, StringFormat='{}{0:N2}'}" FontSize="12" Foreground="#666666"/>
-                                                <TextBlock Text=" جنيه" FontSize="12" Foreground="#666666"/>
+                                                <TextBlock Text=" SDG" FontSize="12" Foreground="#666666"/>
                                             </StackPanel>
                                             
                                             <!-- Discount Display -->
-                                            <TextBlock Text="{Binding DiscountAmount, StringFormat='خصم: {0:N2} جنيه'}" 
+                                            <TextBlock Text="{Binding DiscountAmount, StringFormat='خصم: {0:N2} SDG'}" 
                                                        FontSize="11" 
                                                        Foreground="#FF6F00" 
                                                        FontWeight="SemiBold"
@@ -153,7 +153,7 @@
                                         
                                         <!-- Total Price -->
                                         <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
-                                                   Text="{Binding TotalPrice, StringFormat='المجموع: {0:N2} ریال'}" 
+                                                   Text="{Binding TotalPrice, StringFormat='المجموع: {0:N2} SDG'}" 
                                                    FontSize="14" FontWeight="Bold" 
                                                    Foreground="#4CAF50" 
                                                    HorizontalAlignment="Right" 
@@ -183,7 +183,7 @@
             <Border Grid.Row="2" Background="#FFF3E0" Padding="15" BorderBrush="#E0E0E0" BorderThickness="1,0">
                 <Grid>
                     <TextBlock Text="الإجمالي" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right" FlowDirection="RightToLeft"/>
-                    <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N2} ریال'}" FontSize="24" FontWeight="Bold" Foreground="#FF6F00" HorizontalAlignment="Left"/>
+                    <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N2} SDG'}" FontSize="24" FontWeight="Bold" Foreground="#FF6F00" HorizontalAlignment="Left"/>
                 </Grid>
             </Border>
 

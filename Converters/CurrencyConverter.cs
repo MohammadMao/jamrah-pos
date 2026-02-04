@@ -12,9 +12,9 @@ namespace JamrahPOS.Converters
         {
             if (value is decimal decimalValue)
             {
-                return $"{decimalValue:N2} جنيه";
+                return $"{decimalValue:N2} SDG";
             }
-            return "0.00 جنيه";
+            return "0.00 SDG";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

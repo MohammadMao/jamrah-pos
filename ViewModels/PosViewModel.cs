@@ -268,7 +268,7 @@ namespace JamrahPOS.ViewModels
                 }
 
                 MessageBox.Show(
-                    $"تم حفظ الطلب بنجاح\nرقم الطلب: {order.OrderNumber}\nالإجمالي: {order.TotalAmount:N2} جنيه",
+                    $"تم حفظ الطلب بنجاح\nرقم الطلب: {order.OrderNumber}\nالإجمالي: {order.TotalAmount:N2} SDG",
                     "نجاح",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);

@@ -64,7 +64,7 @@ namespace JamrahPOS.Services
                 if (menuItem != null && item.UnitPrice < menuItem.Price)
                 {
                     var discount = (menuItem.Price - item.UnitPrice) * item.Quantity;
-                    receipt.AppendLine($"  (خصم: {discount:N2} جنيه)");
+                    receipt.AppendLine($"  (خصم: {discount:N2} SDG)");
                 }
             }
 
@@ -80,11 +80,11 @@ namespace JamrahPOS.Services
             if (totalDiscount > 0)
             {
                 var originalTotal = subtotal + totalDiscount;
-                receipt.AppendLine(FormatTotalLine("المجموع الأصلي:", $"{originalTotal:N2} جنيه"));
-                receipt.AppendLine(FormatTotalLine("الخصم:", $"{totalDiscount:N2} جنيه"));
+                receipt.AppendLine(FormatTotalLine("المجموع الأصلي:", $"{originalTotal:N2} SDG"));
+                receipt.AppendLine(FormatTotalLine("الخصم:", $"{totalDiscount:N2} SDG"));
             }
 
-            receipt.AppendLine(FormatTotalLine("الإجمالي:", $"{order.TotalAmount:N2} جنيه"));
+            receipt.AppendLine(FormatTotalLine("الإجمالي:", $"{order.TotalAmount:N2} SDG"));
             receipt.AppendLine();
 
             // Footer

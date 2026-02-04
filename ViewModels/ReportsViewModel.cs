@@ -17,14 +17,23 @@ namespace JamrahPOS.ViewModels
     {
         private readonly ReportService _reportService;
         private ObservableCollection<DailySalesReport> _dailyReports = new();
-        private ObservableCollection<WeeklySalesReport> _weeklyReports = new();
         private ObservableCollection<MonthlySalesReport> _monthlyReports = new();
+        private List<DailySalesReport> _allDailyReports = new();
         
         private DateTime _startDate;
         private DateTime _endDate;
-        private int _selectedReportType = 0; // 0: Daily, 1: Weekly, 2: Monthly
+        private int _selectedReportType = 0; // 0: Daily, 1: Monthly
         private bool _isLoading;
         private string _statusMessage = string.Empty;
+        
+        // Pagination for Daily Reports
+        private int _currentPage = 1;
+        private int _totalPages = 1;
+        private const int PageSize = 7;
+        
+        // Year selection for Monthly Reports
+        private int _selectedYear;
+        private ObservableCollection<int> _availableYears = new();
 
         public ObservableCollection<DailySalesReport> DailyReports
         {
@@ -32,16 +41,46 @@ namespace JamrahPOS.ViewModels
             set => SetProperty(ref _dailyReports, value);
         }
 
-        public ObservableCollection<WeeklySalesReport> WeeklyReports
-        {
-            get => _weeklyReports;
-            set => SetProperty(ref _weeklyReports, value);
-        }
-
         public ObservableCollection<MonthlySalesReport> MonthlyReports
         {
             get => _monthlyReports;
             set => SetProperty(ref _monthlyReports, value);
+        }
+        
+        public int CurrentPage
+        {
+            get => _currentPage;
+            set
+            {
+                if (SetProperty(ref _currentPage, value))
+                {
+                    UpdateDailyReportsPage();
+                }
+            }
+        }
+        
+        public int TotalPages
+        {
+            get => _totalPages;
+            set => SetProperty(ref _totalPages, value);
+        }
+        
+        public int SelectedYear
+        {
+            get => _selectedYear;
+            set
+            {
+                if (SetProperty(ref _selectedYear, value))
+                {
+                    _ = LoadReportsAsync();
+                }
+            }
+        }
+        
+        public ObservableCollection<int> AvailableYears
+        {
+            get => _availableYears;
+            set => SetProperty(ref _availableYears, value);
         }
 
         public DateTime StartDate
@@ -96,14 +135,22 @@ namespace JamrahPOS.ViewModels
 
         public ICommand RefreshCommand { get; }
         public ICommand ExportCommand { get; }
+        public ICommand NextPageCommand { get; }
+        public ICommand PreviousPageCommand { get; }
+        public ICommand GoToPageCommand { get; }
+        public ICommand ResetFiltersCommand { get; }
 
         public ReportsViewModel()
         {
             try
             {
                 Console.WriteLine("[REPORTS] ReportsViewModel() constructor started");
-                _startDate = DateTime.Now.AddDays(-30);
-                _endDate = DateTime.Now;
+                _startDate = DateTime.Now.Date;
+                _endDate = DateTime.Now.Date;
+                _selectedYear = DateTime.Now.Year;
+                
+                // Initialize available years (2026 onwards)
+                InitializeAvailableYears();
 
                 // Initialize context and service - use default PosDbContext without custom options
                 var context = new PosDbContext();
@@ -111,7 +158,14 @@ namespace JamrahPOS.ViewModels
 
                 RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
                 ExportCommand = new RelayCommand(_ => ExportToCSV());
+                NextPageCommand = new RelayCommand(_ => { if (CurrentPage < TotalPages) CurrentPage++; });
+                PreviousPageCommand = new RelayCommand(_ => { if (CurrentPage > 1) CurrentPage--; });
+                GoToPageCommand = new RelayCommand(param => { if (param is int page) CurrentPage = page; });
+                ResetFiltersCommand = new RelayCommand(_ => ResetFilters());
                 Console.WriteLine("[REPORTS] ReportsViewModel initialized successfully");
+                
+                // Load initial reports
+                _ = LoadReportsAsync();
             }
             catch (Exception ex)
             {
@@ -127,13 +181,25 @@ namespace JamrahPOS.ViewModels
             try
             {
                 Console.WriteLine("[REPORTS] ReportsViewModel(context) constructor started");
-                _startDate = DateTime.Now.AddDays(-30);
-                _endDate = DateTime.Now;
+                _startDate = DateTime.Now.Date;
+                _endDate = DateTime.Now.Date;
+                _selectedYear = DateTime.Now.Year;
+                
+                // Initialize available years (2026 onwards)
+                InitializeAvailableYears();
+                
                 _reportService = new ReportService(context);
 
                 RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
                 ExportCommand = new RelayCommand(_ => ExportToCSV());
+                NextPageCommand = new RelayCommand(_ => { if (CurrentPage < TotalPages) CurrentPage++; });
+                PreviousPageCommand = new RelayCommand(_ => { if (CurrentPage > 1) CurrentPage--; });
+                GoToPageCommand = new RelayCommand(param => { if (param is int page) CurrentPage = page; });
+                ResetFiltersCommand = new RelayCommand(_ => ResetFilters());
                 Console.WriteLine("[REPORTS] ReportsViewModel initialized successfully");
+                
+                // Load initial reports
+                _ = LoadReportsAsync();
             }
             catch (Exception ex)
             {
@@ -159,10 +225,7 @@ namespace JamrahPOS.ViewModels
                     case 0: // Daily Reports
                         await LoadDailyReportsAsync();
                         break;
-                    case 1: // Weekly Reports
-                        await LoadWeeklyReportsAsync();
-                        break;
-                    case 2: // Monthly Reports
+                    case 1: // Monthly Reports
                         await LoadMonthlyReportsAsync();
                         break;
                 }
@@ -193,7 +256,14 @@ namespace JamrahPOS.ViewModels
                 Console.WriteLine($"[REPORTS] Loading daily reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
                 var reports = await _reportService.GetDailySalesReportsAsync(StartDate, EndDate);
                 Console.WriteLine($"[REPORTS] Retrieved {reports.Count} daily reports");
-                DailyReports = new ObservableCollection<DailySalesReport>(reports);
+                // Sort by date descending (newest first)
+                _allDailyReports = reports.OrderByDescending(r => r.Date).ToList();
+                
+                // Calculate pagination
+                TotalPages = (int)Math.Ceiling((double)_allDailyReports.Count / PageSize);
+                CurrentPage = 1; // Reset to first page
+                
+                UpdateDailyReportsPage();
             }
             catch (Exception ex)
             {
@@ -201,24 +271,12 @@ namespace JamrahPOS.ViewModels
                 throw;
             }
         }
-
-        /// <summary>
-        /// Loads weekly sales reports
-        /// </summary>
-        private async Task LoadWeeklyReportsAsync()
+        
+        private void UpdateDailyReportsPage()
         {
-            try
-            {
-                Console.WriteLine($"[REPORTS] Loading weekly reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
-                var reports = await _reportService.GetWeeklySalesReportsAsync(StartDate, EndDate);
-                Console.WriteLine($"[REPORTS] Retrieved {reports.Count} weekly reports");
-                WeeklyReports = new ObservableCollection<WeeklySalesReport>(reports);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[REPORTS] ERROR in LoadWeeklyReportsAsync: {ex.Message}");
-                throw;
-            }
+            var skip = (CurrentPage - 1) * PageSize;
+            var pagedReports = _allDailyReports.Skip(skip).Take(PageSize);
+            DailyReports = new ObservableCollection<DailySalesReport>(pagedReports);
         }
 
         /// <summary>
@@ -228,16 +286,51 @@ namespace JamrahPOS.ViewModels
         {
             try
             {
-                Console.WriteLine($"[REPORTS] Loading monthly reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
-                var reports = await _reportService.GetMonthlyRangeReportsAsync(StartDate, EndDate);
+                Console.WriteLine($"[REPORTS] Loading monthly reports for year {SelectedYear}");
+                
+                // Determine start and end dates based on selected year
+                DateTime startDate, endDate;
+                
+                if (SelectedYear == DateTime.Now.Year)
+                {
+                    // Current year: from January to current month
+                    startDate = new DateTime(SelectedYear, 1, 1);
+                    endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month));
+                }
+                else
+                {
+                    // Past years: full year (January to December)
+                    startDate = new DateTime(SelectedYear, 1, 1);
+                    endDate = new DateTime(SelectedYear, 12, 31);
+                }
+                
+                var reports = await _reportService.GetMonthlyRangeReportsAsync(startDate, endDate);
                 Console.WriteLine($"[REPORTS] Retrieved {reports.Count} monthly reports");
-                MonthlyReports = new ObservableCollection<MonthlySalesReport>(reports);
+                // Sort by date descending (newest first)
+                MonthlyReports = new ObservableCollection<MonthlySalesReport>(reports.OrderByDescending(r => r.Year).ThenByDescending(r => r.Month));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[REPORTS] ERROR in LoadMonthlyReportsAsync: {ex.Message}");
                 throw;
             }
+        }
+        
+        private void InitializeAvailableYears()
+        {
+            // Start from 2026 up to current year
+            var years = new List<int>();
+            for (int year = 2026; year <= DateTime.Now.Year; year++)
+            {
+                years.Add(year);
+            }
+            AvailableYears = new ObservableCollection<int>(years.OrderByDescending(y => y));
+        }
+        
+        private void ResetFilters()
+        {
+            StartDate = DateTime.Now.Date;
+            EndDate = DateTime.Now.Date;
         }
 
         /// <summary>
@@ -259,10 +352,7 @@ namespace JamrahPOS.ViewModels
                         case 0: // Daily
                             ExportDailyReportsToCSV(writer);
                             break;
-                        case 1: // Weekly
-                            ExportWeeklyReportsToCSV(writer);
-                            break;
-                        case 2: // Monthly
+                        case 1: // Monthly
                             ExportMonthlyReportsToCSV(writer);
                             break;
                     }
@@ -288,43 +378,6 @@ namespace JamrahPOS.ViewModels
             foreach (var report in DailyReports)
             {
                 writer.WriteLine($"Date,{report.FormattedDate}");
-                writer.WriteLine($"Total Sales,{report.TotalSales:F2}");
-                writer.WriteLine($"Order Count,{report.OrderCount}");
-                writer.WriteLine($"Average Order Value,{report.AverageOrderValue:F2}");
-                writer.WriteLine();
-
-                writer.WriteLine("Payment Methods");
-                writer.WriteLine("Method,Total Amount,Order Count,Percentage");
-                foreach (var pm in report.PaymentMethods)
-                {
-                    writer.WriteLine($"{pm.PaymentMethod},{pm.TotalAmount:F2},{pm.OrderCount},{pm.Percentage:F2}%");
-                }
-                writer.WriteLine();
-
-                writer.WriteLine("Cashiers");
-                writer.WriteLine("Name,Total Amount,Order Count,Percentage");
-                foreach (var cashier in report.Cashiers)
-                {
-                    writer.WriteLine($"{cashier.CashierName},{cashier.TotalAmount:F2},{cashier.OrderCount},{cashier.Percentage:F2}%");
-                }
-                writer.WriteLine();
-                writer.WriteLine("---");
-                writer.WriteLine();
-            }
-        }
-
-        /// <summary>
-        /// Exports weekly reports to CSV
-        /// </summary>
-        private void ExportWeeklyReportsToCSV(StreamWriter writer)
-        {
-            writer.WriteLine("Weekly Sales Report");
-            writer.WriteLine($"Period: {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
-            writer.WriteLine();
-
-            foreach (var report in WeeklyReports)
-            {
-                writer.WriteLine($"Week,{report.FormattedPeriod}");
                 writer.WriteLine($"Total Sales,{report.TotalSales:F2}");
                 writer.WriteLine($"Order Count,{report.OrderCount}");
                 writer.WriteLine($"Average Order Value,{report.AverageOrderValue:F2}");

@@ -15,6 +15,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -75,21 +76,32 @@
                     <TextBlock Text="نوع التقرير" FontSize="13" FontWeight="Bold" Margin="0,0,0,8" Foreground="#555"/>
                     <ComboBox SelectedIndex="{Binding SelectedReportType}" FontSize="13" Width="150">
                         <ComboBoxItem>التقارير اليومية</ComboBoxItem>
-                        <ComboBoxItem>التقارير الأسبوعية</ComboBoxItem>
                         <ComboBoxItem>التقارير الشهرية</ComboBoxItem>
                     </ComboBox>
                 </StackPanel>
 
-                <!-- Start Date -->
-                <StackPanel Grid.Column="1" Margin="0,0,20,0">
+                <!-- Start Date (Daily Reports Only) -->
+                <StackPanel Grid.Column="1" Margin="0,0,20,0"
+                            Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=0}">
                     <TextBlock Text="من تاريخ" FontSize="13" FontWeight="Bold" Margin="0,0,0,8" Foreground="#555"/>
                     <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}" FontSize="13" Width="140"/>
                 </StackPanel>
 
-                <!-- End Date -->
-                <StackPanel Grid.Column="2" Margin="0,0,20,0">
+                <!-- End Date (Daily Reports Only) -->
+                <StackPanel Grid.Column="2" Margin="0,0,20,0"
+                            Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=0}">
                     <TextBlock Text="إلى تاريخ" FontSize="13" FontWeight="Bold" Margin="0,0,0,8" Foreground="#555"/>
                     <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}" FontSize="13" Width="140"/>
+                </StackPanel>
+                
+                <!-- Year Selection (Monthly Reports Only) -->
+                <StackPanel Grid.Column="1" Margin="0,0,20,0"
+                            Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=1}">
+                    <TextBlock Text="السنة" FontSize="13" FontWeight="Bold" Margin="0,0,0,8" Foreground="#555"/>
+                    <ComboBox ItemsSource="{Binding AvailableYears}" 
+                              SelectedItem="{Binding SelectedYear, Mode=TwoWay}" 
+                              FontSize="13" 
+                              Width="140"/>
                 </StackPanel>
 
                 <!-- Status Message -->
@@ -99,11 +111,61 @@
                            Foreground="#2196F3"
                            VerticalAlignment="Bottom"
                            Margin="20,0,0,0"/>
+                
+                <!-- Reset Filters Button (Daily Reports Only) -->
+                <Button Grid.Column="4"
+                        Content="🔄 اليوم الحالي"
+                        Command="{Binding ResetFiltersCommand}"
+                        FontSize="12"
+                        Padding="10,5"
+                        Background="#FF9800"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        HorizontalAlignment="Right"
+                        Margin="20,0,0,0"
+                        VerticalAlignment="Bottom"
+                        Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=0}"/>
+            </Grid>
+        </Border>
+        
+        <!-- Pagination Controls (Daily Reports Only) -->
+        <Border Grid.Row="2" Background="White" Padding="15,10" Margin="10,0,10,5"
+                Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=0}">
+            <Grid FlowDirection="LeftToRight">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <TextBlock Text="الصفحة: " FontSize="13" FontWeight="Bold" Foreground="#555" Margin="0,0,10,0" FlowDirection="RightToLeft"/>
+                    <Button Content="◀ السابق"
+                            Command="{Binding PreviousPageCommand}"
+                            FontSize="12"
+                            Padding="10,5"
+                            Background="#2196F3"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Margin="0,0,5,0"
+                            FlowDirection="RightToLeft"/>
+                    <TextBlock FontSize="13" Margin="10,0" VerticalAlignment="Center">
+                        <Run Text="{Binding CurrentPage}"/>
+                        <Run Text=" من "/>
+                        <Run Text="{Binding TotalPages}"/>
+                    </TextBlock>
+                    <Button Content="التالي ▶"
+                            Command="{Binding NextPageCommand}"
+                            FontSize="12"
+                            Padding="10,5"
+                            Background="#2196F3"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Margin="5,0,0,0"
+                            FlowDirection="RightToLeft"/>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- Reports Content -->
-        <Grid Grid.Row="2" Margin="10,0,10,10">
+        <Grid Grid.Row="3" Margin="10,0,10,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
@@ -135,7 +197,7 @@
                                                        FontWeight="Bold" 
                                                        Foreground="#333"/>
                                             <TextBlock Grid.Column="1"
-                                                       Text="{Binding TotalSales, StringFormat='المبيعات: {0:C}'}" 
+                                                       Text="{Binding TotalSales, StringFormat='المبيعات: {0:N2} SDG'}" 
                                                        FontSize="16" 
                                                        FontWeight="Bold" 
                                                        Foreground="#4CAF50"/>
@@ -157,13 +219,13 @@
                                             <Border Grid.Column="1" Background="#F0F0F0" Padding="12" CornerRadius="4" Margin="0,0,10,0">
                                                 <StackPanel>
                                                     <TextBlock Text="متوسط الطلب" FontSize="12" Foreground="#666" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding AverageOrderValue, StringFormat='C2'}" FontSize="18" FontWeight="Bold" Foreground="#FF9800"/>
+                                                    <TextBlock Text="{Binding AverageOrderValue, StringFormat='{}{0:N2} SDG'}" FontSize="18" FontWeight="Bold" Foreground="#FF9800"/>
                                                 </StackPanel>
                                             </Border>
                                             <Border Grid.Column="2" Background="#F0F0F0" Padding="12" CornerRadius="4">
                                                 <StackPanel>
                                                     <TextBlock Text="إجمالي المبيعات" FontSize="12" Foreground="#666" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding TotalSales, StringFormat='C2'}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50"/>
+                                                    <TextBlock Text="{Binding TotalSales, StringFormat='{}{0:N2} SDG'}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50"/>
                                                 </StackPanel>
                                             </Border>
                                         </Grid>
@@ -177,7 +239,7 @@
                                                       Margin="0,10,0,0">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="وسيلة الدفع" Binding="{Binding PaymentMethod}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='C2'}" Width="120" FontSize="12"/>
+                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='{}{0:N2} SDG'}" Width="120" FontSize="12"/>
                                                     <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
                                                     <DataGridTextColumn Header="النسبة" Binding="{Binding Percentage, StringFormat='F2'}" Width="80" FontSize="12"/>
                                                 </DataGrid.Columns>
@@ -193,114 +255,7 @@
                                                       Margin="0,10,0,0">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="اسم الكاشير" Binding="{Binding CashierName}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='C2'}" Width="120" FontSize="12"/>
-                                                    <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
-                                                    <DataGridTextColumn Header="النسبة" Binding="{Binding Percentage, StringFormat='F2'}" Width="80" FontSize="12"/>
-                                                </DataGrid.Columns>
-                                            </DataGrid>
-                                        </Expander>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- Weekly Reports Tab -->
-            <ScrollViewer Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=1}">
-                <StackPanel Margin="0,0,10,0">
-                    <ItemsControl ItemsSource="{Binding WeeklyReports}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="White" Margin="0,0,0,10" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1">
-                                    <StackPanel>
-                                        <!-- Weekly Header -->
-                                        <Grid Margin="0,0,0,15">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0"
-                                                       Text="{Binding FormattedPeriod}" 
-                                                       FontSize="16" 
-                                                       FontWeight="Bold" 
-                                                       Foreground="#333"/>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding TotalSales, StringFormat='C2'}" 
-                                                       FontSize="16" 
-                                                       FontWeight="Bold" 
-                                                       Foreground="#4CAF50"/>
-                                        </Grid>
-
-                                        <!-- Summary Stats -->
-                                        <Grid Margin="0,0,0,15">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" Background="#F0F0F0" Padding="12" CornerRadius="4" Margin="0,0,10,0">
-                                                <StackPanel>
-                                                    <TextBlock Text="عدد الطلبات" FontSize="12" Foreground="#666" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding OrderCount}" FontSize="18" FontWeight="Bold" Foreground="#2196F3"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Grid.Column="1" Background="#F0F0F0" Padding="12" CornerRadius="4" Margin="0,0,10,0">
-                                                <StackPanel>
-                                                    <TextBlock Text="متوسط الطلب" FontSize="12" Foreground="#666" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding AverageOrderValue, StringFormat='C2'}" FontSize="18" FontWeight="Bold" Foreground="#FF9800"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Grid.Column="2" Background="#F0F0F0" Padding="12" CornerRadius="4">
-                                                <StackPanel>
-                                                    <TextBlock Text="إجمالي المبيعات" FontSize="12" Foreground="#666" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding TotalSales, StringFormat='C2'}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </Grid>
-
-                                        <!-- Daily Breakdown -->
-                                        <Expander Header="التفصيل اليومي" Margin="0,0,0,10" Foreground="#333" FontWeight="Bold">
-                                            <DataGrid ItemsSource="{Binding DailyBreakdown}" 
-                                                      AutoGenerateColumns="False"
-                                                      IsReadOnly="True"
-                                                      BorderThickness="0"
-                                                      Margin="0,10,0,0">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding FormattedDate}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبيعات" Binding="{Binding TotalSales, StringFormat='C2'}" Width="120" FontSize="12"/>
-                                                    <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
-                                                </DataGrid.Columns>
-                                            </DataGrid>
-                                        </Expander>
-
-                                        <!-- Payment Methods -->
-                                        <Expander Header="وسائل الدفع" Margin="0,0,0,10" Foreground="#333" FontWeight="Bold">
-                                            <DataGrid ItemsSource="{Binding PaymentMethods}" 
-                                                      AutoGenerateColumns="False"
-                                                      IsReadOnly="True"
-                                                      BorderThickness="0"
-                                                      Margin="0,10,0,0">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="وسيلة الدفع" Binding="{Binding PaymentMethod}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='C2'}" Width="120" FontSize="12"/>
-                                                    <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
-                                                    <DataGridTextColumn Header="النسبة" Binding="{Binding Percentage, StringFormat='F2'}" Width="80" FontSize="12"/>
-                                                </DataGrid.Columns>
-                                            </DataGrid>
-                                        </Expander>
-
-                                        <!-- Cashiers -->
-                                        <Expander Header="الكاشيرون" Foreground="#333" FontWeight="Bold">
-                                            <DataGrid ItemsSource="{Binding Cashiers}" 
-                                                      AutoGenerateColumns="False"
-                                                      IsReadOnly="True"
-                                                      BorderThickness="0"
-                                                      Margin="0,10,0,0">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="اسم الكاشير" Binding="{Binding CashierName}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='C2'}" Width="120" FontSize="12"/>
+                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='{}{0:N2} SDG'}" Width="120" FontSize="12"/>
                                                     <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
                                                     <DataGridTextColumn Header="النسبة" Binding="{Binding Percentage, StringFormat='F2'}" Width="80" FontSize="12"/>
                                                 </DataGrid.Columns>
@@ -315,7 +270,7 @@
             </ScrollViewer>
 
             <!-- Monthly Reports Tab -->
-            <ScrollViewer Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=2}">
+            <ScrollViewer Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=1}">
                 <StackPanel Margin="0,0,10,0">
                     <ItemsControl ItemsSource="{Binding MonthlyReports}">
                         <ItemsControl.ItemTemplate>
@@ -334,7 +289,7 @@
                                                        FontWeight="Bold" 
                                                        Foreground="#333"/>
                                             <TextBlock Grid.Column="1"
-                                                       Text="{Binding TotalSales, StringFormat='C2'}" 
+                                                       Text="{Binding TotalSales, StringFormat='{}{0:N2} SDG'}" 
                                                        FontSize="16" 
                                                        FontWeight="Bold" 
                                                        Foreground="#4CAF50"/>
@@ -356,13 +311,13 @@
                                             <Border Grid.Column="1" Background="#F0F0F0" Padding="12" CornerRadius="4" Margin="0,0,10,0">
                                                 <StackPanel>
                                                     <TextBlock Text="متوسط الطلب" FontSize="12" Foreground="#666" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding AverageOrderValue, StringFormat='C2'}" FontSize="18" FontWeight="Bold" Foreground="#FF9800"/>
+                                                    <TextBlock Text="{Binding AverageOrderValue, StringFormat='{}{0:N2} SDG'}" FontSize="18" FontWeight="Bold" Foreground="#FF9800"/>
                                                 </StackPanel>
                                             </Border>
                                             <Border Grid.Column="2" Background="#F0F0F0" Padding="12" CornerRadius="4">
                                                 <StackPanel>
                                                     <TextBlock Text="إجمالي المبيعات" FontSize="12" Foreground="#666" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding TotalSales, StringFormat='C2'}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50"/>
+                                                    <TextBlock Text="{Binding TotalSales, StringFormat='{}{0:N2} SDG'}" FontSize="18" FontWeight="Bold" Foreground="#4CAF50"/>
                                                 </StackPanel>
                                             </Border>
                                         </Grid>
@@ -376,7 +331,7 @@
                                                       Margin="0,10,0,0">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="التاريخ" Binding="{Binding FormattedDate}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبيعات" Binding="{Binding TotalSales, StringFormat='C2'}" Width="120" FontSize="12"/>
+                                                    <DataGridTextColumn Header="المبيعات" Binding="{Binding TotalSales, StringFormat='{}{0:N2} SDG'}" Width="120" FontSize="12"/>
                                                     <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
                                                 </DataGrid.Columns>
                                             </DataGrid>
@@ -391,7 +346,7 @@
                                                       Margin="0,10,0,0">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="وسيلة الدفع" Binding="{Binding PaymentMethod}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='C2'}" Width="120" FontSize="12"/>
+                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='{}{0:N2} SDG'}" Width="120" FontSize="12"/>
                                                     <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
                                                     <DataGridTextColumn Header="النسبة" Binding="{Binding Percentage, StringFormat='F2'}" Width="80" FontSize="12"/>
                                                 </DataGrid.Columns>
@@ -407,7 +362,7 @@
                                                       Margin="0,10,0,0">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="اسم الكاشير" Binding="{Binding CashierName}" Width="*" FontSize="12"/>
-                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='C2'}" Width="120" FontSize="12"/>
+                                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='{}{0:N2} SDG'}" Width="120" FontSize="12"/>
                                                     <DataGridTextColumn Header="عدد الطلبات" Binding="{Binding OrderCount}" Width="100" FontSize="12"/>
                                                     <DataGridTextColumn Header="النسبة" Binding="{Binding Percentage, StringFormat='F2'}" Width="80" FontSize="12"/>
                                                 </DataGrid.Columns>

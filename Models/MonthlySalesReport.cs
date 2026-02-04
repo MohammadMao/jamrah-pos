@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace JamrahPOS.Models
 {
     /// <summary>
@@ -5,9 +7,12 @@ namespace JamrahPOS.Models
     /// </summary>
     public class MonthlySalesReport
     {
+        private static readonly string[] ArabicMonthNames = new[] 
+        { "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر" };
+        
         public int Year { get; set; }
         public int Month { get; set; }
-        public string FormattedPeriod => new DateTime(Year, Month, 1).ToString("MMMM yyyy");
+        public string FormattedPeriod => $"{ArabicMonthNames[Month - 1]} {Year}";
         public decimal TotalSales { get; set; }
         public int OrderCount { get; set; }
         public List<DailySalesReport> DailyBreakdown { get; set; } = new();

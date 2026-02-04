@@ -40,7 +40,7 @@
                            Foreground="#666666"
                            HorizontalAlignment="Center"/>
                 <TextBlock x:Name="TotalAmountText" 
-                           Text="0.00 جنيه" 
+                           Text="0.00 SDG" 
                            FontSize="32" 
                            FontWeight="Bold" 
                            Foreground="#4CAF50"

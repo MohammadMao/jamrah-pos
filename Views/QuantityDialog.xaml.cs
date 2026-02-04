@@ -22,7 +22,7 @@ namespace JamrahPOS.Views
             Quantity = 1;
 
             ItemNameText.Text = itemName;
-            PriceText.Text = $"{price:N2} ريال";
+            PriceText.Text = $"{price:N2} SDG";
             QuantityTextBox.Text = "1";
             QuantityTextBox.Focus();
             QuantityTextBox.SelectAll();

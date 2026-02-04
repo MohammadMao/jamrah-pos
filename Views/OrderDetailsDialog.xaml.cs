@@ -25,7 +25,7 @@ namespace JamrahPOS.Views
             DateTimeText.Text = order.OrderDateTime.ToString("yyyy/MM/dd - HH:mm:ss");
             CashierText.Text = order.Cashier?.Username ?? "غير معروف";
             PaymentMethodText.Text = order.PaymentMethod;
-            TotalAmountText.Text = $"{order.TotalAmount:N2} جنيه";
+            TotalAmountText.Text = $"{order.TotalAmount:N2} SDG";
 
             // Set status
             if (order.IsVoided)

@@ -259,7 +259,7 @@
                     </Button.Style>
                 </Button>
 
-                <Button Content="� المخزون"
+                <Button Content="📦 المخزون"
                         Command="{Binding NavigateToInventoryCommand}"
                         FontSize="16"
                         FontWeight="SemiBold"
@@ -291,7 +291,7 @@
                     </Button.Style>
                 </Button>
 
-                <Button Content="�📊 التقارير"
+                <Button Content="📊 التقارير"
                         Command="{Binding NavigateToReportsCommand}"
                         FontSize="16"
                         FontWeight="SemiBold"
