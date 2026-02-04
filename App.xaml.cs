@@ -30,22 +30,27 @@ namespace JamrahPOS
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             DispatcherUnhandledException += App_DispatcherUnhandledException;
             
-            // Redirect console output to file
+            // Redirect console output to file with rotation
             try
             {
-                string logPath = Path.Combine(
+                string logDir = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "JamrahPOS",
-                    "app.log"
+                    "JamrahPOS"
                 );
                 
-                _logFile = new StreamWriter(logPath, append: true)
+                Directory.CreateDirectory(logDir);
+                string logPath = Path.Combine(logDir, "app.log");
+                
+                // Rotate old log if exists
+                RotateLogFile(logPath, logDir);
+                
+                _logFile = new StreamWriter(logPath, append: false) // Start fresh
                 {
                     AutoFlush = true
                 };
                 
                 Console.SetOut(_logFile);
-                Console.WriteLine($"\n=== Application Started: {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+                Console.WriteLine($"=== Application Started: {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
             }
             catch
             {
@@ -100,6 +105,79 @@ namespace JamrahPOS
                 "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             
             e.Handled = true;
+        }
+
+        /// <summary>
+        /// Rotates log file by renaming old log with timestamp and cleaning up old logs
+        /// </summary>
+        private static void RotateLogFile(string currentLogPath, string logDir)
+        {
+            try
+            {
+                // If current log exists and has content, rotate it
+                if (File.Exists(currentLogPath))
+                {
+                    var fileInfo = new FileInfo(currentLogPath);
+                    if (fileInfo.Length > 0)
+                    {
+                        // Create rotated log filename with timestamp
+                        string timestamp = File.GetLastWriteTime(currentLogPath).ToString("yyyy-MM-dd_HH-mm-ss");
+                        string rotatedLogPath = Path.Combine(logDir, $"app_{timestamp}.log");
+                        
+                        // Rename current log to rotated name
+                        File.Move(currentLogPath, rotatedLogPath);
+                    }
+                    else
+                    {
+                        // Empty log, just delete it
+                        File.Delete(currentLogPath);
+                    }
+                }
+                
+                // Clean up old log files (keep last 10, delete older than 7 days)
+                CleanupOldLogs(logDir);
+            }
+            catch
+            {
+                // If rotation fails, continue anyway
+            }
+        }
+
+        /// <summary>
+        /// Deletes old log files keeping only last 10 and removing files older than 7 days
+        /// </summary>
+        private static void CleanupOldLogs(string logDir)
+        {
+            try
+            {
+                var logFiles = Directory.GetFiles(logDir, "app_*.log")
+                    .Select(f => new FileInfo(f))
+                    .OrderByDescending(f => f.LastWriteTime)
+                    .ToList();
+
+                // Keep last 10 log files, delete the rest
+                var filesToDelete = logFiles.Skip(10).ToList();
+                
+                // Also delete any logs older than 7 days
+                var sevenDaysAgo = DateTime.Now.AddDays(-7);
+                filesToDelete.AddRange(logFiles.Where(f => f.LastWriteTime < sevenDaysAgo));
+                
+                foreach (var file in filesToDelete.Distinct())
+                {
+                    try
+                    {
+                        file.Delete();
+                    }
+                    catch
+                    {
+                        // Ignore individual file deletion errors
+                    }
+                }
+            }
+            catch
+            {
+                // If cleanup fails, continue anyway
+            }
         }
     }
 }
