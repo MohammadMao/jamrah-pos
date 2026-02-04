@@ -30,7 +30,7 @@
                     <TextBlock Text="إدارة الطلبات" 
                                FontSize="24" 
                                FontWeight="Bold" 
-                               HorizontalAlignment="Right" 
+                               HorizontalAlignment="Right"
                                FlowDirection="RightToLeft"/>
                     <Button Content="🔄 تحديث" 
                             Command="{Binding RefreshCommand}"
@@ -40,7 +40,8 @@
                             Foreground="White"
                             BorderThickness="0"
                             Cursor="Hand"
-                            HorizontalAlignment="Left"/>
+                            HorizontalAlignment="Left"
+                            FlowDirection="LeftToRight"/>
                 </Grid>
 
                 <!-- Filters -->

@@ -26,13 +26,14 @@
                 </Grid.RowDefinitions>
 
                 <!-- Title and Buttons -->
-                <Grid Grid.Row="0" Margin="0,0,0,15" FlowDirection="RightToLeft">
+                <Grid Grid.Row="0" Margin="0,0,0,15">
                     <TextBlock Text="إدارة الأصناف" 
                                FontSize="24" 
                                FontWeight="Bold" 
                                HorizontalAlignment="Right" 
-                               VerticalAlignment="Center"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                               VerticalAlignment="Center"
+                               FlowDirection="RightToLeft"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" FlowDirection="LeftToRight">
                         <Button Content="➕ إضافة صنف" 
                                 Command="{Binding AddMenuItemCommand}"
                                 FontSize="14"
@@ -55,14 +56,13 @@
                 </Grid>
 
                 <!-- Category Filter -->
-                <StackPanel Grid.Row="1" FlowDirection="RightToLeft">
+                <StackPanel Grid.Row="1" FlowDirection="RightToLeft" HorizontalAlignment="Right">
                     <TextBlock Text="التصنيف" FontSize="12" Margin="0,0,0,5"/>
                     <ComboBox ItemsSource="{Binding Categories}" 
                               SelectedItem="{Binding SelectedCategory}"
                               DisplayMemberPath="Name"
                               FontSize="14" 
-                              Width="200"
-                              HorizontalAlignment="Right">
+                              Width="200">
                         <ComboBox.ItemContainerStyle>
                             <Style TargetType="ComboBoxItem">
                                 <Setter Property="FlowDirection" Value="RightToLeft"/>

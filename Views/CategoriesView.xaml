@@ -19,13 +19,14 @@
 
         <!-- Header -->
         <Border Grid.Row="0" Background="White" Padding="20" Margin="10,10,10,5">
-            <Grid FlowDirection="RightToLeft">
+            <Grid>
                 <TextBlock Text="إدارة التصنيفات" 
                            FontSize="24" 
                            FontWeight="Bold" 
                            HorizontalAlignment="Right" 
-                           VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                           VerticalAlignment="Center"
+                           FlowDirection="RightToLeft"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" FlowDirection="LeftToRight">
                     <Button Content="➕ إضافة تصنيف" 
                             Command="{Binding AddCategoryCommand}"
                             FontSize="14"

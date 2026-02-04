@@ -53,6 +53,7 @@ namespace JamrahPOS.ViewModels
         public ICommand NavigateToCategoriesCommand { get; }
         public ICommand NavigateToMenuItemsCommand { get; }
         public ICommand NavigateToUsersCommand { get; }
+        public ICommand NavigateToInventoryCommand { get; }
         public ICommand NavigateToReportsCommand { get; }
 
         public MainViewModel()
@@ -80,6 +81,7 @@ namespace JamrahPOS.ViewModels
                 NavigateToCategoriesCommand = new RelayCommand(_ => NavigateToCategories());
                 NavigateToMenuItemsCommand = new RelayCommand(_ => NavigateToMenuItems());
                 NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers());
+                NavigateToInventoryCommand = new RelayCommand(_ => NavigateToInventory());
                 NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
 
                 // Start with POS view
@@ -166,6 +168,22 @@ namespace JamrahPOS.ViewModels
                 Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
                 Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في فتح شاشة المستخدمين: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void NavigateToInventory()
+        {
+            try
+            {
+                Console.WriteLine("[MAIN] Navigating to Inventory view");
+                CurrentView = new Views.InventoryView();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to Inventory: {ex.Message}");
+                Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة المخزون: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

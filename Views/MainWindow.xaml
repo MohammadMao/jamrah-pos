@@ -259,7 +259,39 @@
                     </Button.Style>
                 </Button>
 
-                <Button Content="📊 التقارير"
+                <Button Content="� المخزون"
+                        Command="{Binding NavigateToInventoryCommand}"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Padding="20,10"
+                        Background="#607D8B"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Margin="10,0,0,0">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="5"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#455A64"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="�📊 التقارير"
                         Command="{Binding NavigateToReportsCommand}"
                         FontSize="16"
                         FontWeight="SemiBold"

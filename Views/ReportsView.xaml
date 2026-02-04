@@ -22,19 +22,19 @@
         <Border Grid.Row="0" Background="White" Padding="20" Margin="10,10,10,5" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0"
+                <TextBlock Grid.Column="1"
                            Text="التقارير والبيانات"
                            FontSize="28" 
                            FontWeight="Bold" 
-                           HorizontalAlignment="Right" 
+                           HorizontalAlignment="Right"
                            FlowDirection="RightToLeft"
                            Foreground="#333"/>
                 
-                <StackPanel Grid.Column="1" HorizontalAlignment="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="0" HorizontalAlignment="Left" Orientation="Horizontal" VerticalAlignment="Center" FlowDirection="LeftToRight">
                     <Button Content="🔄 تحديث" 
                             Command="{Binding RefreshCommand}"
                             FontSize="13"
@@ -58,7 +58,7 @@
 
         <!-- Filters Section -->
         <Border Grid.Row="1" Background="White" Padding="20" Margin="10,0,10,5">
-            <Grid>
+            <Grid FlowDirection="RightToLeft">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>

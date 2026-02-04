@@ -1,0 +1,174 @@
+<Window x:Class="JamrahPOS.Views.InventoryItemDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="إدارة صنف المخزون" 
+        Height="500" 
+        Width="450"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
+        FlowDirection="RightToLeft"
+        Background="#F5F5F5"
+        FontFamily="Arial">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" 
+                   x:Name="TitleText"
+                   Text="إضافة صنف جديد" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,20"/>
+
+        <!-- Name Field -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,15">
+            <TextBlock Text="اسم الصنف *" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBox x:Name="NameTextBox" 
+                     FontSize="16" 
+                     Padding="10"
+                     MaxLength="200"/>
+        </StackPanel>
+
+        <!-- Unit Field -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,15">
+            <TextBlock Text="الوحدة (كجم، كيس، قطعة، إلخ) *" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBox x:Name="UnitTextBox" 
+                     FontSize="16" 
+                     Padding="10"
+                     MaxLength="50"/>
+        </StackPanel>
+
+        <!-- Quantity Field -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,15">
+            <TextBlock Text="الكمية" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBox x:Name="QuantityTextBox" 
+                     Text="0"
+                     FontSize="16" 
+                     Padding="10"
+                     PreviewTextInput="DecimalTextBox_PreviewTextInput"/>
+        </StackPanel>
+
+        <!-- Minimum Quantity Field -->
+        <StackPanel Grid.Row="4" Margin="0,0,0,15">
+            <TextBlock Text="الحد الأدنى للكمية" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBox x:Name="MinimumQuantityTextBox" 
+                     FontSize="16" 
+                     Padding="10"
+                     Text="0"
+                     PreviewTextInput="DecimalTextBox_PreviewTextInput"/>
+        </StackPanel>
+
+        <!-- Notes Field -->
+        <StackPanel Grid.Row="5" Margin="0,0,0,15">
+            <TextBlock Text="ملاحظات" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+            <TextBox x:Name="NotesTextBox" 
+                     FontSize="14" 
+                     Padding="10"
+                     Height="60"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     VerticalScrollBarVisibility="Auto"/>
+        </StackPanel>
+
+        <!-- Validation Message -->
+        <TextBlock Grid.Row="6"
+                   x:Name="ErrorText"
+                   Text=""
+                   FontSize="12"
+                   Foreground="Red"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,10"
+                   VerticalAlignment="Top"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="7" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center"
+                    Margin="0,10,0,0">
+            
+            <Button Content="حفظ" 
+                    Width="120" 
+                    Height="45"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Background="#4CAF50"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Margin="5"
+                    Click="Save_Click"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#4CAF50"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="5"
+                                            BorderThickness="0">
+                                        <ContentPresenter HorizontalAlignment="Center" 
+                                                         VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#45a049"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button Content="إلغاء" 
+                    Width="120" 
+                    Height="45"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Background="#f44336"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Margin="5"
+                    Click="Cancel_Click"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#f44336"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="5"
+                                            BorderThickness="0">
+                                        <ContentPresenter HorizontalAlignment="Center" 
+                                                         VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#da190b"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

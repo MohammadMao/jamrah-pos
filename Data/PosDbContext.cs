@@ -15,6 +15,7 @@ namespace JamrahPOS.Data
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<InventoryItem> InventoryItems { get; set; }
 
         public PosDbContext()
         {
