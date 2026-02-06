@@ -117,3 +117,7 @@ Output: `bin\Release\net8.0-windows\win-x64\publish\`
 - **Repository Pattern**: Database access abstraction
 - **Service Layer**: Business logic isolation
 - **RTL Support**: Native Arabic interface
+
+## Screenshots
+<img width="1919" height="1002" alt="Screenshot 2026-02-06 082732" src="https://github.com/user-attachments/assets/1cfda277-6924-4cc0-b22a-face0f85ddc4" />
+<img width="1919" height="1002" alt="Screenshot 2026-02-06 082836" src="https://github.com/user-attachments/assets/560efc67-902d-4853-9694-c71104f082d2" />
