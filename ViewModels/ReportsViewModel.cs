@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using JamrahPOS.Data;
@@ -135,6 +136,7 @@ namespace JamrahPOS.ViewModels
 
         public ICommand RefreshCommand { get; }
         public ICommand ExportCommand { get; }
+        public ICommand PrintCommand { get; }
         public ICommand NextPageCommand { get; }
         public ICommand PreviousPageCommand { get; }
         public ICommand GoToPageCommand { get; }
@@ -158,6 +160,7 @@ namespace JamrahPOS.ViewModels
 
                 RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
                 ExportCommand = new RelayCommand(_ => ExportToCSV());
+                PrintCommand = new RelayCommand(_ => { _ = PrintReportsAsync(); });
                 NextPageCommand = new RelayCommand(_ => { if (CurrentPage < TotalPages) CurrentPage++; });
                 PreviousPageCommand = new RelayCommand(_ => { if (CurrentPage > 1) CurrentPage--; });
                 GoToPageCommand = new RelayCommand(param => { if (param is int page) CurrentPage = page; });
@@ -192,6 +195,7 @@ namespace JamrahPOS.ViewModels
 
                 RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
                 ExportCommand = new RelayCommand(_ => ExportToCSV());
+                PrintCommand = new RelayCommand(_ => { _ = PrintReportsAsync(); });
                 NextPageCommand = new RelayCommand(_ => { if (CurrentPage < TotalPages) CurrentPage++; });
                 PreviousPageCommand = new RelayCommand(_ => { if (CurrentPage > 1) CurrentPage--; });
                 GoToPageCommand = new RelayCommand(param => { if (param is int page) CurrentPage = page; });
@@ -437,6 +441,200 @@ namespace JamrahPOS.ViewModels
                 writer.WriteLine("---");
                 writer.WriteLine();
             }
+        }
+
+        /// <summary>
+        /// Prints the current reports
+        /// </summary>
+        private async Task PrintReportsAsync()
+        {
+            try
+            {
+                IsLoading = true;
+                StatusMessage = "جاري تحضير التقرير للطباعة...";
+
+                string reportText = "";
+
+                switch (SelectedReportType)
+                {
+                    case 0: // Daily
+                        reportText = GenerateDailyReportsText();
+                        break;
+                    case 1: // Monthly
+                        reportText = GenerateMonthlyReportsText();
+                        break;
+                }
+
+                var printService = new PrintService();
+                bool result = await printService.PrintReportAsync(reportText);
+
+                if (result)
+                {
+                    StatusMessage = "تم إرسال التقرير للطباعة بنجاح";
+                    MessageBox.Show("تم إرسال التقرير للطباعة بنجاح", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    StatusMessage = "فشل في إرسال التقرير للطباعة";
+                    MessageBox.Show("فشل في إرسال التقرير للطباعة", "خطأ", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"خطأ في الطباعة: {ex.Message}";
+                MessageBox.Show($"خطأ في الطباعة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Generates formatted text for daily reports
+        /// </summary>
+        private string GenerateDailyReportsText()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("================");
+            sb.AppendLine(CenterText("تقرير يومي"));
+            sb.AppendLine("================");
+            sb.AppendLine($"تاريخ الطباعة: {DateTime.Now:yyyy/MM/dd   HH:mm:ss}");
+            sb.AppendLine();
+
+            if (DailyReports.Count == 0)
+            {
+                sb.AppendLine("لا توجد بيانات");
+                return sb.ToString();
+            }
+
+            foreach (var report in DailyReports)
+            {
+                sb.AppendLine($"التاريخ: {report.FormattedDate}");
+                sb.AppendLine($"المبيعات: {report.TotalSales:F2} SDG");
+                sb.AppendLine($"الطلبات: {report.OrderCount}");
+                sb.AppendLine();
+
+                // Menu Items Breakdown
+                if (report.MenuItems.Count > 0)
+                {
+                    sb.AppendLine("تفصيل المبيعات:");
+                    sb.AppendLine(new string('-', 32));
+                    foreach (var item in report.MenuItems)
+                    {
+                        sb.AppendLine($"• {item.Name}");
+                        sb.AppendLine($"  الكمية: {item.TotalQuantity}   السعر: {item.UnitPrice:F2}   الإجمالي: {item.TotalRevenue:F2}");
+                    }
+                    sb.AppendLine();
+                }
+
+                // Payment Methods - Simple list
+                if (report.PaymentMethods.Count > 0)
+                {
+                    sb.AppendLine("طرق الدفع:");
+                    sb.AppendLine(new string('-', 32));
+                    foreach (var pm in report.PaymentMethods)
+                    {
+                        sb.AppendLine($"• {pm.PaymentMethod}");
+                        sb.AppendLine($"  المبلغ: {pm.TotalAmount:F2}");
+                        sb.AppendLine($"  العدد: {pm.OrderCount}");
+                    }
+                    sb.AppendLine();
+                }
+
+                // Cashiers - Simple list
+                if (report.Cashiers.Count > 0)
+                {
+                    sb.AppendLine("الكاشيرون:");
+                    sb.AppendLine(new string('-', 32));
+                    foreach (var cashier in report.Cashiers)
+                    {
+                        sb.AppendLine($"• {cashier.CashierName}");
+                        sb.AppendLine($"  المبلغ: {cashier.TotalAmount:F2}");
+                        sb.AppendLine($"  العدد: {cashier.OrderCount}");
+                    }
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine(new string('=', 32));
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Generates formatted text for monthly reports
+        /// </summary>
+        private string GenerateMonthlyReportsText()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("================");
+            sb.AppendLine(CenterText("تقرير شهري"));
+            sb.AppendLine("================");
+            sb.AppendLine($"تاريخ الطباعة: {DateTime.Now:yyyy/MM/dd   HH:mm:ss}");
+            sb.AppendLine();
+
+            if (MonthlyReports.Count == 0)
+            {
+                sb.AppendLine("لا توجد بيانات");
+                return sb.ToString();
+            }
+
+            foreach (var report in MonthlyReports)
+            {
+                sb.AppendLine($"الشهر: {report.FormattedPeriod}");
+                sb.AppendLine($"المبيعات: {report.TotalSales:F2} SDG");
+                sb.AppendLine($"الطلبات: {report.OrderCount}");
+                sb.AppendLine();
+
+                // Payment Methods - Simple list
+                if (report.PaymentMethods.Count > 0)
+                {
+                    sb.AppendLine("طرق الدفع:");
+                    sb.AppendLine(new string('-', 16));
+                    foreach (var pm in report.PaymentMethods)
+                    {
+                        sb.AppendLine($"• {pm.PaymentMethod}");
+                        sb.AppendLine($"  المبلغ: {pm.TotalAmount:F2}");
+                        sb.AppendLine($"  العدد: {pm.OrderCount}");
+                    }
+                    sb.AppendLine();
+                }
+
+                // Cashiers - Simple list
+                if (report.Cashiers.Count > 0)
+                {
+                    sb.AppendLine("الكاشيرون:");
+                    sb.AppendLine(new string('-', 16));
+                    foreach (var cashier in report.Cashiers)
+                    {
+                        sb.AppendLine($"• {cashier.CashierName}");
+                        sb.AppendLine($"  المبلغ: {cashier.TotalAmount:F2}");
+                        sb.AppendLine($"  العدد: {cashier.OrderCount}");
+                    }
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine(new string('=', 16));
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Centers text for display (minimal padding for thermal printers)
+        /// </summary>
+        private string CenterText(string text)
+        {
+            const int width = 16;
+            if (text.Length >= width) return text;
+
+            var padding = (width - text.Length) / 2;
+            return new string(' ', Math.Max(0, padding / 2)) + text;
         }
     }
 }

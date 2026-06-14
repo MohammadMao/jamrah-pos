@@ -45,6 +45,15 @@
                             BorderThickness="0"
                             Cursor="Hand"
                             Margin="0,0,10,0"/>
+                    <Button Content="🖨️ طباعة" 
+                            Command="{Binding PrintCommand}"
+                            FontSize="13"
+                            Padding="12,6"
+                            Background="#9C27B0"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Margin="0,0,10,0"/>
                     <Button Content="💾 تصدير CSV" 
                             Command="{Binding ExportCommand}"
                             FontSize="13"
@@ -229,6 +238,22 @@
                                                 </StackPanel>
                                             </Border>
                                         </Grid>
+
+                                        <!-- Menu Items Breakdown -->
+                                        <Expander Header="تفصيل المبيعات" IsExpanded="True" Margin="0,0,0,10" Foreground="#333" FontWeight="Bold">
+                                            <DataGrid ItemsSource="{Binding MenuItems}"
+                                                      AutoGenerateColumns="False"
+                                                      IsReadOnly="True"
+                                                      BorderThickness="0"
+                                                      Margin="0,10,0,0">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="الصنف" Binding="{Binding Name}" Width="*" FontSize="12"/>
+                                                    <DataGridTextColumn Header="الكمية" Binding="{Binding TotalQuantity}" Width="70" FontSize="12"/>
+                                                    <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, StringFormat='{}{0:N2}'}" Width="110" FontSize="12"/>
+                                                    <DataGridTextColumn Header="الإجمالي" Binding="{Binding TotalRevenue, StringFormat='{}{0:N2} SDG'}" Width="130" FontSize="12"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Expander>
 
                                         <!-- Payment Methods -->
                                         <Expander Header="وسائل الدفع" Margin="0,0,0,10" Foreground="#333" FontWeight="Bold">

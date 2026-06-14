@@ -28,9 +28,11 @@ namespace JamrahPOS.Services
             startDate = startDate.Date;
             endDate = endDate.Date.AddDays(1).AddSeconds(-1);
 
-            // Get all orders in the date range
+            // Get all orders in the date range (include OrderItems for menu item breakdown)
             var orders = await _context.Orders
                 .Include(o => o.Cashier)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.MenuItem)
                 .Where(o => o.OrderDateTime >= startDate && o.OrderDateTime <= endDate)
                 .OrderBy(o => o.OrderDateTime)
                 .ToListAsync();
@@ -76,6 +78,28 @@ namespace JamrahPOS.Services
                         Percentage = dailyReport.TotalSales > 0 ? (cashierTotal / dailyReport.TotalSales) * 100 : 0
                     });
                 }
+
+                // Aggregate per menu item
+                var itemGroups = dateGroup
+                    .SelectMany(o => o.OrderItems)
+                    .GroupBy(i => i.MenuItemId);
+
+                foreach (var itemGroup in itemGroups)
+                {
+                    var first = itemGroup.First();
+                    dailyReport.MenuItems.Add(new MenuItemSalesReport
+                    {
+                        MenuItemId   = itemGroup.Key,
+                        Name         = first.MenuItem?.Name ?? "صنف",
+                        TotalQuantity = itemGroup.Sum(i => i.Quantity),
+                        UnitPrice    = first.UnitPrice,
+                        TotalRevenue = itemGroup.Sum(i => i.TotalPrice)
+                    });
+                }
+
+                // Sort items by revenue descending
+                dailyReport.MenuItems = dailyReport.MenuItems
+                    .OrderByDescending(m => m.TotalRevenue).ToList();
 
                 reports.Add(dailyReport);
             }

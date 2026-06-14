@@ -27,6 +27,10 @@ namespace JamrahPOS.Models
         public string PaymentMethod { get; set; } = "Cash"; // Cash, Card, etc.
 
         [Required]
+        [MaxLength(20)]
+        public string OrderType { get; set; } = "محلي"; // محلي، سفري، دلفري
+
+        [Required]
         public int CashierId { get; set; }
 
         public bool IsVoided { get; set; } = false;

@@ -238,7 +238,7 @@ namespace JamrahPOS.ViewModels
             try
             {
                 IsLoading = true;
-                var order = await _orderService.SaveOrderAsync(currentUser.Id, paymentDialog.PaymentMethod);
+                var order = await _orderService.SaveOrderAsync(currentUser.Id, paymentDialog.PaymentMethod, paymentDialog.OrderType);
 
                 // Generate receipt
                 var receiptText = _printService.GenerateReceipt(order, currentUser);
@@ -249,21 +249,45 @@ namespace JamrahPOS.ViewModels
                 // Print if requested
                 if (paymentDialog.ShouldPrint)
                 {
-                    var printSuccess = await _printService.PrintReceiptAsync(receiptText);
-                    
-                    if (!printSuccess)
+                    try
                     {
-                        // If printing fails, ask if user wants to open the file
+                        bool printSuccess = true;
+
+                        if (paymentDialog.PrintTwoReceipts)
+                        {
+                            // Print the same receipt twice
+                            printSuccess &= await _printService.PrintKitchenOrderAsync(order);
+                            await Task.Delay(500);
+                            printSuccess &= await _printService.PrintKitchenOrderAsync(order);
+                        }
+                        else
+                        {
+                            // Single receipt
+                            printSuccess &= await _printService.PrintKitchenOrderAsync(order);
+                        }
+
+                        if (!printSuccess)
+                        {
+                            var openResult = MessageBox.Show(
+                                "فشلت الطباعة. هل تريد فتح الفاتورة؟",
+                                "خطأ في الطباعة",
+                                MessageBoxButton.YesNo,
+                                MessageBoxImage.Warning);
+
+                            if (openResult == MessageBoxResult.Yes)
+                                _printService.OpenReceipt(receiptPath);
+                        }
+                    }
+                    catch (Exception printEx)
+                    {
                         var openResult = MessageBox.Show(
-                            "فشلت الطباعة. هل تريد فتح الفاتورة؟",
+                            $"خطأ في الطباعة:\n{printEx.Message}\n\nهل تريد فتح الفاتورة؟",
                             "خطأ في الطباعة",
                             MessageBoxButton.YesNo,
                             MessageBoxImage.Warning);
 
                         if (openResult == MessageBoxResult.Yes)
-                        {
                             _printService.OpenReceipt(receiptPath);
-                        }
                     }
                 }
 

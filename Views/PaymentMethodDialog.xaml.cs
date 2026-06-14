@@ -8,7 +8,9 @@ namespace JamrahPOS.Views
     public partial class PaymentMethodDialog : Window
     {
         public string PaymentMethod { get; private set; } = "نقداً";
+        public string OrderType { get; private set; } = "محلي";
         public bool ShouldPrint { get; private set; } = true;
+        public bool PrintTwoReceipts { get; private set; } = true;
 
         public PaymentMethodDialog(decimal totalAmount)
         {
@@ -32,6 +34,14 @@ namespace JamrahPOS.Views
             }
 
             ShouldPrint = PrintReceiptCheckBox.IsChecked == true;
+            PrintTwoReceipts = PrintTwoReceiptsCheckBox.IsChecked == true;
+
+            if (LocalRadioButton.IsChecked == true)
+                OrderType = "محلي";
+            else if (TakeawayRadioButton.IsChecked == true)
+                OrderType = "سفري";
+            else if (DeliveryRadioButton.IsChecked == true)
+                OrderType = "دلفري";
 
             DialogResult = true;
             Close();

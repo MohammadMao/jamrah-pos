@@ -1,241 +1,243 @@
-using System.Diagnostics;
 using System.IO;
+using System.Net.Sockets;
 using System.Text;
+using JamrahPOS.Helpers;
 using JamrahPOS.Models;
 
 namespace JamrahPOS.Services
 {
     /// <summary>
-    /// Service for generating and printing receipts
+    /// Handles all printing via ESC/POS commands sent directly to the thermal printer.
     /// </summary>
     public class PrintService
     {
-        private const string STORE_NAME = "مطعم جمرة";
-        private const string STORE_SLOGAN = "أصل الطعم المشوي";
-        private const string STORE_ADDRESS = "الخرطوم بحري";
-        private const string STORE_PHONE = "0912147130";
-        private const string RECEIPT_WIDTH = "========================================";
+        public static string PrinterName { get; set; } = "XP-80C (copy 1)";
+
+        // ── Emulator mode ─────────────────────────────────────────────────────────
+        // Set UseEmulator = true to send ESC/POS bytes over TCP to the Docker emulator
+        // instead of the real Windows printer.  View results at http://localhost
+        public static bool   UseEmulator  { get; set; } = false;
+        public static string EmulatorHost { get; set; } = "127.0.0.1";
+        public static int    EmulatorPort { get; set; } = 9100;
+
+        // The Docker emulator (esc2html) is less tolerant than real printers for
+        // large raster jobs. In emulator mode, prefer sending plain text.
+        public static bool EmulatorTextMode { get; set; } = false;
+
+        private static readonly byte[] CMD_INIT     = { 0x1B, 0x40 };                  // ESC @
+        private static readonly byte[] CMD_FEED_CUT = { 0x1B, 0x64, 0x05,             // ESC d 5
+                                 0x1D, 0x56, 0x42, 0x06 };    // GS V B 6
+
+        private readonly ReceiptRenderer _renderer = new();
 
         /// <summary>
-        /// Generates a receipt text for an order
+        /// Sends raw ESC/POS bytes either to the real printer (via winspool) or
+        /// to the Docker emulator (via a plain TCP socket on port 9100).
         /// </summary>
-        public string GenerateReceipt(Order order, User cashier)
+        private static async Task<bool> SendBytesAsync(byte[] bytes)
         {
-            var receipt = new StringBuilder();
-
-            // Header
-            receipt.AppendLine(RECEIPT_WIDTH);
-            receipt.AppendLine(CenterText(STORE_NAME));
-            receipt.AppendLine(CenterText(STORE_SLOGAN));
-            receipt.AppendLine(CenterText(STORE_ADDRESS));
-            receipt.AppendLine(CenterText($"هاتف: {STORE_PHONE}"));
-            receipt.AppendLine(RECEIPT_WIDTH);
-            receipt.AppendLine();
-
-            // Order Information
-            receipt.AppendLine($"رقم الطلب: {order.OrderNumber}");
-            receipt.AppendLine($"التاريخ: {order.OrderDateTime:yyyy/MM/dd}");
-            receipt.AppendLine($"الوقت: {order.OrderDateTime:HH:mm:ss}");
-            receipt.AppendLine($"الكاشير: {cashier.Username}");
-            receipt.AppendLine($"طريقة الدفع: {order.PaymentMethod}");
-            receipt.AppendLine(RECEIPT_WIDTH);
-            receipt.AppendLine();
-
-            // Items Header
-            receipt.AppendLine(FormatLine("الصنف", "الكمية", "السعر", "المجموع"));
-            receipt.AppendLine(new string('-', 40));
-
-            // Order Items
-            foreach (var item in order.OrderItems)
+            if (UseEmulator)
             {
-                var menuItem = item.MenuItem;
-                var name = menuItem?.Name ?? "صنف";
-                
-                // Truncate long names
-                if (name.Length > 15)
-                    name = name.Substring(0, 12) + "...";
-
-                receipt.AppendLine(FormatItemLine(
-                    name,
-                    item.Quantity.ToString(),
-                    $"{item.UnitPrice:N2}",
-                    $"{item.TotalPrice:N2}"
-                ));
-
-                // Show discount if applied
-                if (menuItem != null && item.UnitPrice < menuItem.Price)
+                try
                 {
-                    var discount = (menuItem.Price - item.UnitPrice) * item.Quantity;
-                    receipt.AppendLine($"  (خصم: {discount:N2} SDG)");
+                    using var client = new TcpClient();
+                    await client.ConnectAsync(EmulatorHost, EmulatorPort);
+                    var stream = client.GetStream();
+                    await stream.WriteAsync(bytes);
+                    await stream.FlushAsync();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PRINT] Emulator TCP error: {ex.Message}");
+                    return false;
                 }
             }
 
-            receipt.AppendLine(new string('-', 40));
-            receipt.AppendLine();
+            return await Task.Run(() => RawPrinterHelper.SendBytesToPrinter(PrinterName, bytes));
+        }
 
-            // Totals
-            var subtotal = order.OrderItems.Sum(i => i.TotalPrice);
+        private static byte[] BuildEscPosTextJob(string text)
+        {
+            // Normalise line endings to CRLF for ESC/POS parsers.
+            // Prefix each line with RLM so the emulator's HTML/text renderer
+            // displays Arabic in RTL direction more reliably.
+            const string RLM = "\u200F";
+
+            var normalized = text.Replace("\r\n", "\n");
+            var lines = normalized.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(lines[i]))
+                    lines[i] = RLM + lines[i];
+            }
+
+            var withRtl = string.Join("\r\n", lines);
+            var payload = Encoding.UTF8.GetBytes(withRtl);
+
+            using var ms = new MemoryStream();
+            ms.Write(CMD_INIT);
+            ms.Write(payload);
+            ms.Write(CMD_FEED_CUT);
+            return ms.ToArray();
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // Order receipt
+        // ════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Extracts the short daily sequence number from an OrderNumber like "20260302-5" → "5".
+        /// Falls back to the full OrderNumber if the format is unexpected.
+        /// </summary>
+        public static string GetShortOrderNumber(string orderNumber)
+        {
+            var dash = orderNumber.LastIndexOf('-');
+            return dash >= 0 ? orderNumber[(dash + 1)..] : orderNumber;
+        }
+
+        /// <summary>
+        /// Renders and prints a full customer receipt using ESC/POS raster commands.
+        /// Throws on rendering or send failure so callers can handle/display the error.
+        /// </summary>
+        public async Task<bool> PrintOrderAsync(Order order, User cashier)
+        {
+            if (UseEmulator && EmulatorTextMode)
+            {
+                var receiptText = GenerateReceipt(order, cashier);
+                return await SendBytesAsync(BuildEscPosTextJob(receiptText));
+            }
+
+            var bytes = await Task.Run(() => _renderer.RenderOrderReceipt(order, cashier));
+            return await SendBytesAsync(bytes);
+        }
+
+        /// <summary>
+        /// Renders and prints a kitchen receipt (items + quantities only, no prices).
+        /// Throws on rendering or send failure so callers can handle/display the error.
+        /// </summary>
+        public async Task<bool> PrintKitchenOrderAsync(Order order)
+        {
+            var bytes = await Task.Run(() => _renderer.RenderKitchenReceipt(order));
+            return await SendBytesAsync(bytes);
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // Report printing
+        // ════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Renders and prints a report text block using ESC/POS raster commands.
+        /// Throws on rendering or send failure so callers can handle/display the error.
+        /// </summary>
+        public async Task<bool> PrintReportAsync(string reportText)
+        {
+            if (UseEmulator && EmulatorTextMode)
+                return await SendBytesAsync(BuildEscPosTextJob(reportText));
+
+            var bytes = await Task.Run(() => _renderer.RenderReportText(reportText.Split('\n')));
+            return await SendBytesAsync(bytes);
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // File saving (kept for records / fallback)
+        // ════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Generates a plain-text receipt string used for saving to file.
+        /// </summary>
+        public string GenerateReceipt(Order order, User cashier)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("================");
+            sb.AppendLine("مطعم جمرة");
+            sb.AppendLine("أصل الطعم المشوي");
+            sb.AppendLine("الخرطوم بحري");
+            sb.AppendLine("هاتف: 0912147130");
+            sb.AppendLine("================");
+            sb.AppendLine();
+
+            sb.AppendLine("*** رقم الطلب ***");
+            sb.AppendLine($"{GetShortOrderNumber(order.OrderNumber)}");
+            sb.AppendLine("================");
+            sb.AppendLine($"التاريخ: {order.OrderDateTime:yyyy/MM/dd}");
+            sb.AppendLine($"الوقت: {order.OrderDateTime:HH:mm:ss}");
+            sb.AppendLine($"الكاشير: {cashier.Username}");
+            sb.AppendLine($"طريقة الدفع: {order.PaymentMethod}");
+            sb.AppendLine($"نوع الطلب: {order.OrderType}");
+            sb.AppendLine("================");
+            sb.AppendLine();
+
+            sb.AppendLine("الأصناف:");
+            sb.AppendLine(new string('-', 32));
+
+            foreach (var item in order.OrderItems)
+            {
+                var name = item.MenuItem?.Name ?? "صنف";
+                sb.AppendLine($"• {name}");
+                sb.AppendLine($"  الكمية: {item.Quantity}  السعر: {item.UnitPrice:N2}  المجموع: {item.TotalPrice:N2}");
+
+                if (item.MenuItem != null && item.UnitPrice < item.MenuItem.Price)
+                {
+                    var disc = (item.MenuItem.Price - item.UnitPrice) * item.Quantity;
+                    sb.AppendLine($"  خصم: {disc:N2} SDG");
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine(new string('-', 32));
+
             var totalDiscount = order.OrderItems
                 .Where(i => i.MenuItem != null)
                 .Sum(i => (i.MenuItem!.Price - i.UnitPrice) * i.Quantity);
 
             if (totalDiscount > 0)
             {
-                var originalTotal = subtotal + totalDiscount;
-                receipt.AppendLine(FormatTotalLine("المجموع الأصلي:", $"{originalTotal:N2} SDG"));
-                receipt.AppendLine(FormatTotalLine("الخصم:", $"{totalDiscount:N2} SDG"));
+                sb.AppendLine($"قبل الخصم: {order.TotalAmount + totalDiscount:N2} SDG");
+                sb.AppendLine($"الخصم: {totalDiscount:N2} SDG");
             }
 
-            receipt.AppendLine(FormatTotalLine("الإجمالي:", $"{order.TotalAmount:N2} SDG"));
-            receipt.AppendLine();
+            sb.AppendLine($"الإجمالي: {order.TotalAmount:N2} SDG");
+            sb.AppendLine();
+            sb.AppendLine("================");
+            sb.AppendLine("شكراً لزيارتكم");
+            sb.AppendLine("نتمنى لكم تجربة ممتعة");
+            sb.AppendLine("================");
 
-            // Footer
-            receipt.AppendLine(RECEIPT_WIDTH);
-            receipt.AppendLine(CenterText("شكراً لزيارتكم"));
-            receipt.AppendLine(CenterText("نتمنى لكم تجربة ممتعة"));
-            receipt.AppendLine(RECEIPT_WIDTH);
-
-            return receipt.ToString();
+            return sb.ToString();
         }
 
         /// <summary>
-        /// Prints a receipt to the default printer
-        /// </summary>
-        public async Task<bool> PrintReceiptAsync(string receiptText)
-        {
-            try
-            {
-                // Create temp file for printing
-                var tempFile = Path.Combine(Path.GetTempPath(), $"receipt_{DateTime.Now:yyyyMMddHHmmss}.txt");
-                await File.WriteAllTextAsync(tempFile, receiptText, Encoding.UTF8);
-
-                // On Linux, try to print using lp command
-                if (OperatingSystem.IsLinux())
-                {
-                    var process = new Process
-                    {
-                        StartInfo = new ProcessStartInfo
-                        {
-                            FileName = "lp",
-                            Arguments = tempFile,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        }
-                    };
-
-                    process.Start();
-                    await process.WaitForExitAsync();
-
-                    // Clean up temp file after a delay
-                    _ = Task.Delay(5000).ContinueWith(_ => 
-                    {
-                        try { File.Delete(tempFile); } catch { }
-                    });
-
-                    return process.ExitCode == 0;
-                }
-                // On Windows, use notepad to print
-                else if (OperatingSystem.IsWindows())
-                {
-                    var process = new Process
-                    {
-                        StartInfo = new ProcessStartInfo
-                        {
-                            FileName = "notepad.exe",
-                            Arguments = $"/p {tempFile}",
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        }
-                    };
-
-                    process.Start();
-                    await process.WaitForExitAsync();
-
-                    // Clean up temp file after a delay
-                    _ = Task.Delay(5000).ContinueWith(_ => 
-                    {
-                        try { File.Delete(tempFile); } catch { }
-                    });
-
-                    return true;
-                }
-
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Saves receipt to a file
+        /// Saves a plain-text receipt to the local AppData folder.
         /// </summary>
         public async Task<string> SaveReceiptToFileAsync(string receiptText, string orderNumber)
         {
-            var receiptsDir = Path.Combine(
+            var dir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "JamrahPOS",
-                "Receipts"
-            );
+                "JamrahPOS", "Receipts");
 
-            Directory.CreateDirectory(receiptsDir);
+            Directory.CreateDirectory(dir);
 
-            var fileName = $"Receipt_{orderNumber}_{DateTime.Now:yyyyMMddHHmmss}.txt";
-            var filePath = Path.Combine(receiptsDir, fileName);
-
-            await File.WriteAllTextAsync(filePath, receiptText, Encoding.UTF8);
-
-            return filePath;
+            var path = Path.Combine(dir, $"Receipt_{orderNumber}_{DateTime.Now:yyyyMMddHHmmss}.txt");
+            await File.WriteAllTextAsync(path, receiptText, Encoding.UTF8);
+            return path;
         }
 
         /// <summary>
-        /// Opens the receipt in the default text editor
+        /// Opens a saved receipt file in the default text viewer.
         /// </summary>
         public void OpenReceipt(string filePath)
         {
             try
             {
-                var process = new Process
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = filePath,
-                        UseShellExecute = true
-                    }
-                };
-                process.Start();
+                    FileName        = filePath,
+                    UseShellExecute = true
+                });
             }
-            catch (Exception)
-            {
-                // Ignore if can't open
-            }
-        }
-
-        private string CenterText(string text)
-        {
-            var width = 40;
-            if (text.Length >= width) return text;
-
-            var padding = (width - text.Length) / 2;
-            return new string(' ', padding) + text;
-        }
-
-        private string FormatLine(string col1, string col2, string col3, string col4)
-        {
-            return $"{col1,-15}{col2,5}{col3,10}{col4,10}";
-        }
-
-        private string FormatItemLine(string name, string qty, string price, string total)
-        {
-            return $"{name,-15}{qty,5}{price,10}{total,10}";
-        }
-
-        private string FormatTotalLine(string label, string amount)
-        {
-            return $"{label,25}{amount,15}";
+            catch { /* ignore */ }
         }
     }
 }

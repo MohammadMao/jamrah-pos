@@ -16,6 +16,7 @@ namespace JamrahPOS.Models
         public int OrderCount { get; set; }
         public List<PaymentMethodSummary> PaymentMethods { get; set; } = new();
         public List<CashierSummary> Cashiers { get; set; } = new();
+        public List<MenuItemSalesReport> MenuItems { get; set; } = new();
         public decimal AverageOrderValue => OrderCount > 0 ? TotalSales / OrderCount : 0;
     }
 }

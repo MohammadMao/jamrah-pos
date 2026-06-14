@@ -110,7 +110,7 @@ namespace JamrahPOS.Services
         /// <summary>
         /// Saves the current cart as an order
         /// </summary>
-        public async Task<Order> SaveOrderAsync(int cashierId, string paymentMethod)
+        public async Task<Order> SaveOrderAsync(int cashierId, string paymentMethod, string orderType = "محلي")
         {
             if (_cartItems.Count == 0)
             {
@@ -123,6 +123,7 @@ namespace JamrahPOS.Services
                 OrderDateTime = DateTime.Now,
                 TotalAmount = TotalAmount,
                 PaymentMethod = paymentMethod,
+                OrderType = orderType,
                 CashierId = cashierId,
                 IsVoided = false
             };

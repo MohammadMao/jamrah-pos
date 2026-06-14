@@ -47,17 +47,15 @@ namespace JamrahPOS.Views
         {
             try
             {
-                // Generate receipt text
-                var receiptText = _printService.GenerateReceipt(_order, _order.Cashier);
-                
-                // Print the receipt
-                await _printService.PrintReceiptAsync(receiptText);
-                
-                MessageBox.Show("تم طباعة الفاتورة بنجاح", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                bool ok = await _printService.PrintKitchenOrderAsync(_order);
+                if (ok)
+                    MessageBox.Show("تم طباعة الفاتورة بنجاح", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                else
+                    MessageBox.Show("فشلت الطباعة. تأكد من إعدادات الطابعة.", "خطأ في الطباعة", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ في طباعة الفاتورة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"خطأ في طباعة الفاتورة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
