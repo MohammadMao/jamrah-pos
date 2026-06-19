@@ -33,11 +33,31 @@ namespace JamrahPOS.Services
                 .Include(o => o.Cashier)
                 .Include(o => o.OrderItems)
                     .ThenInclude(i => i.MenuItem)
-                .Where(o => o.OrderDateTime >= startDate && o.OrderDateTime <= endDate)
+                .Where(o => !o.IsVoided && o.OrderDateTime >= startDate && o.OrderDateTime <= endDate)
                 .OrderBy(o => o.OrderDateTime)
                 .ToListAsync();
 
-            // Group by date
+            var dailyReports = BuildDailySalesReports(orders);
+            return dailyReports;
+        }
+
+        public async Task<List<Order>> GetDailySalesOrdersAsync(DateTime startDate, DateTime endDate)
+        {
+            startDate = startDate.Date;
+            endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+
+            return await _context.Orders
+                .Include(o => o.Cashier)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.MenuItem)
+                .Where(o => !o.IsVoided && o.OrderDateTime >= startDate && o.OrderDateTime <= endDate)
+                .OrderBy(o => o.OrderDateTime)
+                .ToListAsync();
+        }
+
+        public List<DailySalesReport> BuildDailySalesReports(List<Order> orders)
+        {
+            var reports = new List<DailySalesReport>();
             var groupedByDate = orders.GroupBy(o => o.OrderDateTime.Date);
 
             foreach (var dateGroup in groupedByDate)
@@ -132,7 +152,7 @@ namespace JamrahPOS.Services
                 // Get all orders for the week
                 var orders = await _context.Orders
                     .Include(o => o.Cashier)
-                    .Where(o => o.OrderDateTime >= weekStart && o.OrderDateTime <= weekEnd)
+                    .Where(o => !o.IsVoided && o.OrderDateTime >= weekStart && o.OrderDateTime <= weekEnd)
                     .OrderBy(o => o.OrderDateTime)
                     .ToListAsync();
 
@@ -211,7 +231,7 @@ namespace JamrahPOS.Services
             // Get all orders for the month
             var orders = await _context.Orders
                 .Include(o => o.Cashier)
-                .Where(o => o.OrderDateTime >= startDate && o.OrderDateTime <= endDate)
+                .Where(o => !o.IsVoided && o.OrderDateTime >= startDate && o.OrderDateTime <= endDate)
                 .OrderBy(o => o.OrderDateTime)
                 .ToListAsync();
 

@@ -18,12 +18,13 @@ namespace JamrahPOS.ViewModels
     {
         private readonly ReportService _reportService;
         private ObservableCollection<DailySalesReport> _dailyReports = new();
+        private ObservableCollection<MonthlySalesReport> _yearlyReports = new();
         private ObservableCollection<MonthlySalesReport> _monthlyReports = new();
         private List<DailySalesReport> _allDailyReports = new();
         
         private DateTime _startDate;
         private DateTime _endDate;
-        private int _selectedReportType = 0; // 0: Daily, 1: Monthly
+        private int _selectedReportType = 0; // 0: Daily, 1: Yearly, 2: Monthly
         private bool _isLoading;
         private string _statusMessage = string.Empty;
         
@@ -32,14 +33,28 @@ namespace JamrahPOS.ViewModels
         private int _totalPages = 1;
         private const int PageSize = 7;
         
-        // Year selection for Monthly Reports
+        // Year selection for Yearly Reports
         private int _selectedYear;
         private ObservableCollection<int> _availableYears = new();
+        
+        // Month selection for Monthly Reports
+        private int _selectedMonth;
+        private ObservableCollection<MonthOption> _availableMonths = new();
+
+        // Period selection for Daily Reports
+        private int _selectedDailyPeriod;
+        private ObservableCollection<PeriodOption> _availableDailyPeriods = new();
 
         public ObservableCollection<DailySalesReport> DailyReports
         {
             get => _dailyReports;
             set => SetProperty(ref _dailyReports, value);
+        }
+
+        public ObservableCollection<MonthlySalesReport> YearlyReports
+        {
+            get => _yearlyReports;
+            set => SetProperty(ref _yearlyReports, value);
         }
 
         public ObservableCollection<MonthlySalesReport> MonthlyReports
@@ -82,6 +97,54 @@ namespace JamrahPOS.ViewModels
         {
             get => _availableYears;
             set => SetProperty(ref _availableYears, value);
+        }
+
+        public int SelectedMonth
+        {
+            get => _selectedMonth;
+            set
+            {
+                if (SetProperty(ref _selectedMonth, value))
+                {
+                    _ = LoadReportsAsync();
+                }
+            }
+        }
+
+        public ObservableCollection<MonthOption> AvailableMonths
+        {
+            get => _availableMonths;
+            set => SetProperty(ref _availableMonths, value);
+        }
+
+        public int SelectedDailyPeriod
+        {
+            get => _selectedDailyPeriod;
+            set
+            {
+                if (SetProperty(ref _selectedDailyPeriod, value))
+                {
+                    _ = LoadReportsAsync();
+                }
+            }
+        }
+
+        public ObservableCollection<PeriodOption> AvailableDailyPeriods
+        {
+            get => _availableDailyPeriods;
+            set => SetProperty(ref _availableDailyPeriods, value);
+        }
+
+        public class MonthOption
+        {
+            public int Value { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class PeriodOption
+        {
+            public int Value { get; set; }
+            public string Name { get; set; }
         }
 
         public DateTime StartDate
@@ -150,9 +213,15 @@ namespace JamrahPOS.ViewModels
                 _startDate = DateTime.Now.Date;
                 _endDate = DateTime.Now.Date;
                 _selectedYear = DateTime.Now.Year;
+                _selectedMonth = DateTime.Now.Month;
+                _selectedDailyPeriod = 0;
                 
                 // Initialize available years (2026 onwards)
                 InitializeAvailableYears();
+                // Initialize available months
+                InitializeAvailableMonths();
+                // Initialize available daily periods
+                InitializeAvailableDailyPeriods();
 
                 // Initialize context and service - use default PosDbContext without custom options
                 var context = new PosDbContext();
@@ -187,9 +256,15 @@ namespace JamrahPOS.ViewModels
                 _startDate = DateTime.Now.Date;
                 _endDate = DateTime.Now.Date;
                 _selectedYear = DateTime.Now.Year;
+                _selectedMonth = DateTime.Now.Month;
+                _selectedDailyPeriod = 0;
                 
                 // Initialize available years (2026 onwards)
                 InitializeAvailableYears();
+                // Initialize available months
+                InitializeAvailableMonths();
+                // Initialize available daily periods
+                InitializeAvailableDailyPeriods();
                 
                 _reportService = new ReportService(context);
 
@@ -229,8 +304,11 @@ namespace JamrahPOS.ViewModels
                     case 0: // Daily Reports
                         await LoadDailyReportsAsync();
                         break;
-                    case 1: // Monthly Reports
-                        await LoadMonthlyReportsAsync();
+                    case 1: // Yearly Reports
+                        await LoadYearlyReportsAsync();
+                        break;
+                    case 2: // Monthly Reports
+                        await LoadSingleMonthReportAsync();
                         break;
                 }
 
@@ -258,7 +336,17 @@ namespace JamrahPOS.ViewModels
             try
             {
                 Console.WriteLine($"[REPORTS] Loading daily reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
-                var reports = await _reportService.GetDailySalesReportsAsync(StartDate, EndDate);
+                var orders = await _reportService.GetDailySalesOrdersAsync(StartDate, EndDate);
+                if (SelectedDailyPeriod == 1)
+                {
+                    orders = orders.Where(o => o.OrderDateTime.TimeOfDay >= new TimeSpan(9, 0, 0) && o.OrderDateTime.TimeOfDay < new TimeSpan(21, 0, 0)).ToList();
+                }
+                else if (SelectedDailyPeriod == 2)
+                {
+                    orders = orders.Where(o => o.OrderDateTime.TimeOfDay >= new TimeSpan(21, 0, 0) || o.OrderDateTime.TimeOfDay < new TimeSpan(9, 0, 0)).ToList();
+                }
+
+                var reports = _reportService.BuildDailySalesReports(orders);
                 Console.WriteLine($"[REPORTS] Retrieved {reports.Count} daily reports");
                 // Sort by date descending (newest first)
                 _allDailyReports = reports.OrderByDescending(r => r.Date).ToList();
@@ -284,13 +372,13 @@ namespace JamrahPOS.ViewModels
         }
 
         /// <summary>
-        /// Loads monthly sales reports
+        /// Loads yearly sales reports (all months of a year)
         /// </summary>
-        private async Task LoadMonthlyReportsAsync()
+        private async Task LoadYearlyReportsAsync()
         {
             try
             {
-                Console.WriteLine($"[REPORTS] Loading monthly reports for year {SelectedYear}");
+                Console.WriteLine($"[REPORTS] Loading yearly reports for year {SelectedYear}");
                 
                 // Determine start and end dates based on selected year
                 DateTime startDate, endDate;
@@ -309,13 +397,33 @@ namespace JamrahPOS.ViewModels
                 }
                 
                 var reports = await _reportService.GetMonthlyRangeReportsAsync(startDate, endDate);
-                Console.WriteLine($"[REPORTS] Retrieved {reports.Count} monthly reports");
+                Console.WriteLine($"[REPORTS] Retrieved {reports.Count} yearly reports");
                 // Sort by date descending (newest first)
-                MonthlyReports = new ObservableCollection<MonthlySalesReport>(reports.OrderByDescending(r => r.Year).ThenByDescending(r => r.Month));
+                YearlyReports = new ObservableCollection<MonthlySalesReport>(reports.OrderByDescending(r => r.Year).ThenByDescending(r => r.Month));
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[REPORTS] ERROR in LoadMonthlyReportsAsync: {ex.Message}");
+                Console.WriteLine($"[REPORTS] ERROR in LoadYearlyReportsAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Loads a single month sales report
+        /// </summary>
+        private async Task LoadSingleMonthReportAsync()
+        {
+            try
+            {
+                Console.WriteLine($"[REPORTS] Loading monthly report for {SelectedMonth}/{SelectedYear}");
+                
+                var reports = await _reportService.GetMonthlySalesReportsAsync(SelectedYear, SelectedMonth);
+                Console.WriteLine($"[REPORTS] Retrieved {reports.Count} monthly report");
+                MonthlyReports = new ObservableCollection<MonthlySalesReport>(reports);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] ERROR in LoadSingleMonthReportAsync: {ex.Message}");
                 throw;
             }
         }
@@ -330,11 +438,43 @@ namespace JamrahPOS.ViewModels
             }
             AvailableYears = new ObservableCollection<int>(years.OrderByDescending(y => y));
         }
+
+        private void InitializeAvailableMonths()
+        {
+            var months = new List<MonthOption>
+            {
+                new MonthOption { Value = 1, Name = "يناير" },
+                new MonthOption { Value = 2, Name = "فبراير" },
+                new MonthOption { Value = 3, Name = "مارس" },
+                new MonthOption { Value = 4, Name = "أبريل" },
+                new MonthOption { Value = 5, Name = "مايو" },
+                new MonthOption { Value = 6, Name = "يونيو" },
+                new MonthOption { Value = 7, Name = "يوليو" },
+                new MonthOption { Value = 8, Name = "أغسطس" },
+                new MonthOption { Value = 9, Name = "سبتمبر" },
+                new MonthOption { Value = 10, Name = "أكتوبر" },
+                new MonthOption { Value = 11, Name = "نوفمبر" },
+                new MonthOption { Value = 12, Name = "ديسمبر" }
+            };
+            AvailableMonths = new ObservableCollection<MonthOption>(months);
+        }
+
+        private void InitializeAvailableDailyPeriods()
+        {
+            var periods = new List<PeriodOption>
+            {
+                new PeriodOption { Value = 0, Name = "الكل" },
+                new PeriodOption { Value = 1, Name = "الفترة الأولى" },
+                new PeriodOption { Value = 2, Name = "الفترة الثانية" }
+            };
+            AvailableDailyPeriods = new ObservableCollection<PeriodOption>(periods);
+        }
         
         private void ResetFilters()
         {
             StartDate = DateTime.Now.Date;
             EndDate = DateTime.Now.Date;
+            SelectedDailyPeriod = 0;
         }
 
         /// <summary>
@@ -356,7 +496,10 @@ namespace JamrahPOS.ViewModels
                         case 0: // Daily
                             ExportDailyReportsToCSV(writer);
                             break;
-                        case 1: // Monthly
+                        case 1: // Yearly
+                            ExportYearlyReportsToCSV(writer);
+                            break;
+                        case 2: // Monthly
                             ExportMonthlyReportsToCSV(writer);
                             break;
                     }
@@ -382,6 +525,42 @@ namespace JamrahPOS.ViewModels
             foreach (var report in DailyReports)
             {
                 writer.WriteLine($"Date,{report.FormattedDate}");
+                writer.WriteLine($"Total Sales,{report.TotalSales:F2}");
+                writer.WriteLine($"Order Count,{report.OrderCount}");
+                writer.WriteLine($"Average Order Value,{report.AverageOrderValue:F2}");
+                writer.WriteLine();
+
+                writer.WriteLine("Payment Methods");
+                writer.WriteLine("Method,Total Amount,Order Count,Percentage");
+                foreach (var pm in report.PaymentMethods)
+                {
+                    writer.WriteLine($"{pm.PaymentMethod},{pm.TotalAmount:F2},{pm.OrderCount},{pm.Percentage:F2}%");
+                }
+                writer.WriteLine();
+
+                writer.WriteLine("Cashiers");
+                writer.WriteLine("Name,Total Amount,Order Count,Percentage");
+                foreach (var cashier in report.Cashiers)
+                {
+                    writer.WriteLine($"{cashier.CashierName},{cashier.TotalAmount:F2},{cashier.OrderCount},{cashier.Percentage:F2}%");
+                }
+                writer.WriteLine();
+                writer.WriteLine("---");
+                writer.WriteLine();
+            }
+        }
+
+        /// <summary>
+        /// Exports yearly reports to CSV
+        /// </summary>
+        private void ExportYearlyReportsToCSV(StreamWriter writer)
+        {
+            writer.WriteLine("Yearly Sales Report");
+            writer.WriteLine();
+
+            foreach (var report in YearlyReports)
+            {
+                writer.WriteLine($"Month,{report.FormattedPeriod}");
                 writer.WriteLine($"Total Sales,{report.TotalSales:F2}");
                 writer.WriteLine($"Order Count,{report.OrderCount}");
                 writer.WriteLine($"Average Order Value,{report.AverageOrderValue:F2}");
@@ -460,7 +639,10 @@ namespace JamrahPOS.ViewModels
                     case 0: // Daily
                         reportText = GenerateDailyReportsText();
                         break;
-                    case 1: // Monthly
+                    case 1: // Yearly
+                        reportText = GenerateYearlyReportsText();
+                        break;
+                    case 2: // Monthly
                         reportText = GenerateMonthlyReportsText();
                         break;
                 }
@@ -558,6 +740,67 @@ namespace JamrahPOS.ViewModels
                 }
 
                 sb.AppendLine(new string('=', 32));
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Generates formatted text for yearly reports
+        /// </summary>
+        private string GenerateYearlyReportsText()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("================");
+            sb.AppendLine(CenterText("تقرير سنوي"));
+            sb.AppendLine("================");
+            sb.AppendLine($"تاريخ الطباعة: {DateTime.Now:yyyy/MM/dd   HH:mm:ss}");
+            sb.AppendLine();
+
+            if (YearlyReports.Count == 0)
+            {
+                sb.AppendLine("لا توجد بيانات");
+                return sb.ToString();
+            }
+
+            foreach (var report in YearlyReports)
+            {
+                sb.AppendLine($"الشهر: {report.FormattedPeriod}");
+                sb.AppendLine($"المبيعات: {report.TotalSales:F2} SDG");
+                sb.AppendLine($"الطلبات: {report.OrderCount}");
+                sb.AppendLine();
+
+                // Payment Methods - Simple list
+                if (report.PaymentMethods.Count > 0)
+                {
+                    sb.AppendLine("طرق الدفع:");
+                    sb.AppendLine(new string('-', 16));
+                    foreach (var pm in report.PaymentMethods)
+                    {
+                        sb.AppendLine($"• {pm.PaymentMethod}");
+                        sb.AppendLine($"  المبلغ: {pm.TotalAmount:F2}");
+                        sb.AppendLine($"  العدد: {pm.OrderCount}");
+                    }
+                    sb.AppendLine();
+                }
+
+                // Cashiers - Simple list
+                if (report.Cashiers.Count > 0)
+                {
+                    sb.AppendLine("الكاشيرون:");
+                    sb.AppendLine(new string('-', 16));
+                    foreach (var cashier in report.Cashiers)
+                    {
+                        sb.AppendLine($"• {cashier.CashierName}");
+                        sb.AppendLine($"  المبلغ: {cashier.TotalAmount:F2}");
+                        sb.AppendLine($"  العدد: {cashier.OrderCount}");
+                    }
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine(new string('=', 16));
                 sb.AppendLine();
             }
 
