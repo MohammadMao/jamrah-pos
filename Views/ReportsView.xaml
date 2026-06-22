@@ -7,10 +7,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1200">
     
-    <UserControl.DataContext>
-        <viewmodels:ReportsViewModel />
-    </UserControl.DataContext>
-
     <Grid Background="#F5F5F5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -20,7 +16,13 @@
         </Grid.RowDefinitions>
 
         <!-- Header Section -->
-        <Border Grid.Row="0" Background="White" Padding="20" Margin="10,10,10,5" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0"
+                Background="White"
+                Padding="20"
+                Margin="10,10,10,5"
+                BorderBrush="#E0E0E0"
+                BorderThickness="0,0,0,1"
+                Visibility="{Binding ShowReportFilters, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -67,7 +69,11 @@
         </Border>
 
         <!-- Filters Section -->
-        <Border Grid.Row="1" Background="White" Padding="20" Margin="10,0,10,5">
+        <Border Grid.Row="1"
+                Background="White"
+                Padding="20"
+                Margin="10,0,10,5"
+                Visibility="{Binding ShowReportFilters, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid FlowDirection="RightToLeft">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -527,6 +533,77 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
+            </ScrollViewer>
+
+            <!-- Period Settings Tab (Admin Only) -->
+            <ScrollViewer Visibility="{Binding SelectedReportType, Converter={StaticResource EqualToVisibilityConverter}, ConverterParameter=3}">
+                <Border Background="White" Padding="20" CornerRadius="8" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,10">
+                    <StackPanel FlowDirection="RightToLeft">
+                        <TextBlock Text="إعدادات الفترات" FontSize="18" FontWeight="Bold" Margin="0,0,0,20" Foreground="#333" />
+
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="الفترة" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" Text="الفترة الأولى" FontSize="14" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="بداية الفترة" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="30,0,10,0"/>
+                            <ComboBox Grid.Column="3" ItemsSource="{Binding AvailableHours}" SelectedValuePath="Hour" SelectedValue="{Binding SelectedFirstPeriodStartHour, Mode=TwoWay}" DisplayMemberPath="Label" FontSize="13" Width="150" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" Text="" FontSize="14" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="نهاية الفترة" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="30,0,10,0"/>
+                            <ComboBox Grid.Column="3" ItemsSource="{Binding AvailableHours}" SelectedValuePath="Hour" SelectedValue="{Binding SelectedFirstPeriodEndHour, Mode=TwoWay}" DisplayMemberPath="Label" FontSize="13" Width="150" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="الفترة" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" Text="الفترة الثانية" FontSize="14" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="بداية الفترة" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="30,0,10,0"/>
+                            <ComboBox Grid.Column="3" ItemsSource="{Binding AvailableHours}" SelectedValuePath="Hour" SelectedValue="{Binding SelectedSecondPeriodStartHour, Mode=TwoWay}" DisplayMemberPath="Label" FontSize="13" Width="150" />
+                        </Grid>
+
+                        <Grid Margin="0,0,0,25">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" Text="" FontSize="14" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="نهاية الفترة" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="30,0,10,0"/>
+                            <ComboBox Grid.Column="3" ItemsSource="{Binding AvailableHours}" SelectedValuePath="Hour" SelectedValue="{Binding SelectedSecondPeriodEndHour, Mode=TwoWay}" DisplayMemberPath="Label" FontSize="13" Width="150" />
+                        </Grid>
+
+                        <Button Content="حفظ الإعدادات" Command="{Binding SavePeriodSettingsCommand}" FontSize="13" Padding="12,8" Background="#4CAF50" Foreground="White" BorderThickness="0" Width="170" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </Border>
             </ScrollViewer>
         </Grid>
     </Grid>

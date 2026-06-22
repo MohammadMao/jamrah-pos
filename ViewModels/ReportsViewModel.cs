@@ -24,7 +24,7 @@ namespace JamrahPOS.ViewModels
         
         private DateTime _startDate;
         private DateTime _endDate;
-        private int _selectedReportType = 0; // 0: Daily, 1: Yearly, 2: Monthly
+        private int _selectedReportType = 0; // 0: Daily, 1: Yearly, 2: Monthly, 3: Period settings
         private bool _isLoading;
         private string _statusMessage = string.Empty;
         
@@ -44,6 +44,16 @@ namespace JamrahPOS.ViewModels
         // Period selection for Daily Reports
         private int _selectedDailyPeriod;
         private ObservableCollection<PeriodOption> _availableDailyPeriods = new();
+
+        // Admin period settings
+        private ObservableCollection<TimeOption> _availableHours = new();
+        private int _selectedFirstPeriodStartHour;
+        private int _selectedFirstPeriodEndHour;
+        private int _selectedSecondPeriodStartHour;
+        private int _selectedSecondPeriodEndHour;
+        private bool _isAdmin;
+        private ReportPeriodSetting? _firstPeriodSetting;
+        private ReportPeriodSetting? _secondPeriodSetting;
 
         public ObservableCollection<DailySalesReport> DailyReports
         {
@@ -135,6 +145,42 @@ namespace JamrahPOS.ViewModels
             set => SetProperty(ref _availableDailyPeriods, value);
         }
 
+        public ObservableCollection<TimeOption> AvailableHours
+        {
+            get => _availableHours;
+            set => SetProperty(ref _availableHours, value);
+        }
+
+        public int SelectedFirstPeriodStartHour
+        {
+            get => _selectedFirstPeriodStartHour;
+            set => SetProperty(ref _selectedFirstPeriodStartHour, value);
+        }
+
+        public int SelectedFirstPeriodEndHour
+        {
+            get => _selectedFirstPeriodEndHour;
+            set => SetProperty(ref _selectedFirstPeriodEndHour, value);
+        }
+
+        public int SelectedSecondPeriodStartHour
+        {
+            get => _selectedSecondPeriodStartHour;
+            set => SetProperty(ref _selectedSecondPeriodStartHour, value);
+        }
+
+        public int SelectedSecondPeriodEndHour
+        {
+            get => _selectedSecondPeriodEndHour;
+            set => SetProperty(ref _selectedSecondPeriodEndHour, value);
+        }
+
+        public bool IsAdmin
+        {
+            get => _isAdmin;
+            set => SetProperty(ref _isAdmin, value);
+        }
+
         public class MonthOption
         {
             public int Value { get; set; }
@@ -204,14 +250,19 @@ namespace JamrahPOS.ViewModels
         public ICommand PreviousPageCommand { get; }
         public ICommand GoToPageCommand { get; }
         public ICommand ResetFiltersCommand { get; }
+        public ICommand SavePeriodSettingsCommand { get; }
 
-        public ReportsViewModel()
+        public bool ShowReportFilters { get; }
+
+        public ReportsViewModel(int initialReportType = 0, bool showReportFilters = true)
         {
             try
             {
                 Console.WriteLine("[REPORTS] ReportsViewModel() constructor started");
                 _startDate = DateTime.Now.Date;
                 _endDate = DateTime.Now.Date;
+                _selectedReportType = initialReportType;
+                ShowReportFilters = showReportFilters;
                 _selectedYear = DateTime.Now.Year;
                 _selectedMonth = DateTime.Now.Month;
                 _selectedDailyPeriod = 0;
@@ -227,6 +278,7 @@ namespace JamrahPOS.ViewModels
                 var context = new PosDbContext();
                 _reportService = new ReportService(context);
 
+                IsAdmin = SessionService.Instance.IsAdmin;
                 RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
                 ExportCommand = new RelayCommand(_ => ExportToCSV());
                 PrintCommand = new RelayCommand(_ => { _ = PrintReportsAsync(); });
@@ -234,9 +286,12 @@ namespace JamrahPOS.ViewModels
                 PreviousPageCommand = new RelayCommand(_ => { if (CurrentPage > 1) CurrentPage--; });
                 GoToPageCommand = new RelayCommand(param => { if (param is int page) CurrentPage = page; });
                 ResetFiltersCommand = new RelayCommand(_ => ResetFilters());
+                var savePeriodSettingsCommand = new RelayCommand(_ => { _ = SavePeriodSettingsAsync(); });
+                SavePeriodSettingsCommand = savePeriodSettingsCommand;
                 Console.WriteLine("[REPORTS] ReportsViewModel initialized successfully");
                 
-                // Load initial reports
+                // Load initial reports and settings
+                _ = LoadPeriodSettingsAsync();
                 _ = LoadReportsAsync();
             }
             catch (Exception ex)
@@ -248,13 +303,15 @@ namespace JamrahPOS.ViewModels
             }
         }
 
-        public ReportsViewModel(PosDbContext context)
+        public ReportsViewModel(PosDbContext context, int initialReportType = 0, bool showReportFilters = true)
         {
             try
             {
                 Console.WriteLine("[REPORTS] ReportsViewModel(context) constructor started");
                 _startDate = DateTime.Now.Date;
                 _endDate = DateTime.Now.Date;
+                _selectedReportType = initialReportType;
+                ShowReportFilters = showReportFilters;
                 _selectedYear = DateTime.Now.Year;
                 _selectedMonth = DateTime.Now.Month;
                 _selectedDailyPeriod = 0;
@@ -268,6 +325,7 @@ namespace JamrahPOS.ViewModels
                 
                 _reportService = new ReportService(context);
 
+                IsAdmin = SessionService.Instance.IsAdmin;
                 RefreshCommand = new RelayCommand(_ => { _ = LoadReportsAsync(); });
                 ExportCommand = new RelayCommand(_ => ExportToCSV());
                 PrintCommand = new RelayCommand(_ => { _ = PrintReportsAsync(); });
@@ -275,9 +333,11 @@ namespace JamrahPOS.ViewModels
                 PreviousPageCommand = new RelayCommand(_ => { if (CurrentPage > 1) CurrentPage--; });
                 GoToPageCommand = new RelayCommand(param => { if (param is int page) CurrentPage = page; });
                 ResetFiltersCommand = new RelayCommand(_ => ResetFilters());
+                SavePeriodSettingsCommand = new RelayCommand(_ => { _ = SavePeriodSettingsAsync(); });
                 Console.WriteLine("[REPORTS] ReportsViewModel initialized successfully");
                 
-                // Load initial reports
+                // Load initial reports and settings
+                _ = LoadPeriodSettingsAsync();
                 _ = LoadReportsAsync();
             }
             catch (Exception ex)
@@ -310,6 +370,9 @@ namespace JamrahPOS.ViewModels
                     case 2: // Monthly Reports
                         await LoadSingleMonthReportAsync();
                         break;
+                    case 3: // Period settings
+                        StatusMessage = "يمكنك تعديل إعدادات الفترات";
+                        return;
                 }
 
                 StatusMessage = "تم تحميل التقارير بنجاح";
@@ -337,13 +400,17 @@ namespace JamrahPOS.ViewModels
             {
                 Console.WriteLine($"[REPORTS] Loading daily reports from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}");
                 var orders = await _reportService.GetDailySalesOrdersAsync(StartDate, EndDate);
-                if (SelectedDailyPeriod == 1)
+                if (SelectedDailyPeriod == 1 && _firstPeriodSetting != null)
                 {
-                    orders = orders.Where(o => o.OrderDateTime.TimeOfDay >= new TimeSpan(9, 0, 0) && o.OrderDateTime.TimeOfDay < new TimeSpan(21, 0, 0)).ToList();
+                    var firstStart = TimeSpan.FromHours(_firstPeriodSetting.StartHour);
+                    var firstEnd = TimeSpan.FromMinutes(_firstPeriodSetting.EndTimeMinutes);
+                    orders = orders.Where(o => IsTimeInPeriod(o.OrderDateTime.TimeOfDay, firstStart, firstEnd)).ToList();
                 }
-                else if (SelectedDailyPeriod == 2)
+                else if (SelectedDailyPeriod == 2 && _secondPeriodSetting != null)
                 {
-                    orders = orders.Where(o => o.OrderDateTime.TimeOfDay >= new TimeSpan(21, 0, 0) || o.OrderDateTime.TimeOfDay < new TimeSpan(9, 0, 0)).ToList();
+                    var secondStart = TimeSpan.FromHours(_secondPeriodSetting.StartHour);
+                    var secondEnd = TimeSpan.FromMinutes(_secondPeriodSetting.EndTimeMinutes);
+                    orders = orders.Where(o => IsTimeInPeriod(o.OrderDateTime.TimeOfDay, secondStart, secondEnd)).ToList();
                 }
 
                 var reports = _reportService.BuildDailySalesReports(orders);
@@ -363,7 +430,86 @@ namespace JamrahPOS.ViewModels
                 throw;
             }
         }
-        
+
+        private async Task LoadPeriodSettingsAsync()
+        {
+            try
+            {
+                var hours = await _reportService.GetTimeOptionsAsync();
+                AvailableHours = new ObservableCollection<TimeOption>(hours);
+
+                var periods = await _reportService.GetReportPeriodSettingsAsync();
+                _firstPeriodSetting = periods.FirstOrDefault(p => p.Name == "الفترة الأولى" || p.Id == 1);
+                _secondPeriodSetting = periods.FirstOrDefault(p => p.Name == "الفترة الثانية" || p.Id == 2);
+
+                if (_firstPeriodSetting != null)
+                {
+                    SelectedFirstPeriodStartHour = _firstPeriodSetting.StartHour;
+                    SelectedFirstPeriodEndHour = _firstPeriodSetting.EndHour;
+                }
+
+                if (_secondPeriodSetting != null)
+                {
+                    SelectedSecondPeriodStartHour = _secondPeriodSetting.StartHour;
+                    SelectedSecondPeriodEndHour = _secondPeriodSetting.EndHour;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] ERROR in LoadPeriodSettingsAsync: {ex.Message}");
+                StatusMessage = "خطأ في تحميل إعدادات الفترات";
+            }
+        }
+
+        private async Task SavePeriodSettingsAsync()
+        {
+            try
+            {
+                if (!IsAdmin)
+                {
+                    MessageBox.Show("هذه الميزة متاحة للمدير فقط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (_firstPeriodSetting == null || _secondPeriodSetting == null)
+                {
+                    MessageBox.Show("تعذر تحميل إعدادات الفترات الحالية.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                _firstPeriodSetting.StartHour = SelectedFirstPeriodStartHour;
+                _firstPeriodSetting.EndHour = SelectedFirstPeriodEndHour;
+                _firstPeriodSetting.EndTimeMinutes = SelectedFirstPeriodEndHour == 0 ? 23 * 60 + 59 : SelectedFirstPeriodEndHour * 60;
+
+                _secondPeriodSetting.StartHour = SelectedSecondPeriodStartHour;
+                _secondPeriodSetting.EndHour = SelectedSecondPeriodEndHour;
+                _secondPeriodSetting.EndTimeMinutes = SelectedSecondPeriodEndHour == 0 ? 23 * 60 + 59 : SelectedSecondPeriodEndHour * 60;
+
+                await _reportService.SaveReportPeriodSettingsAsync(new List<ReportPeriodSetting> { _firstPeriodSetting, _secondPeriodSetting });
+                StatusMessage = "تم حفظ إعدادات الفترات بنجاح";
+                MessageBox.Show("تم حفظ إعدادات الفترات بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Reload filters and refresh the report data in case the user is viewing daily reports.
+                _ = LoadReportsAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[REPORTS] ERROR in SavePeriodSettingsAsync: {ex.Message}");
+                StatusMessage = "خطأ في حفظ إعدادات الفترات";
+                MessageBox.Show($"حدث خطأ أثناء حفظ الإعدادات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool IsTimeInPeriod(TimeSpan orderTime, TimeSpan start, TimeSpan end)
+        {
+            if (start <= end)
+            {
+                return orderTime >= start && orderTime <= end;
+            }
+
+            return orderTime >= start || orderTime <= end;
+        }
+
         private void UpdateDailyReportsPage()
         {
             var skip = (CurrentPage - 1) * PageSize;

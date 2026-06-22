@@ -128,6 +128,53 @@ namespace JamrahPOS.Services
         }
 
         /// <summary>
+        /// Gets configured time options for report period selectors
+        /// </summary>
+        public async Task<List<TimeOption>> GetTimeOptionsAsync()
+        {
+            return await _context.TimeOptions
+                .OrderBy(t => t.Hour)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Gets report period settings for display and filtering
+        /// </summary>
+        public async Task<List<ReportPeriodSetting>> GetReportPeriodSettingsAsync()
+        {
+            return await _context.ReportPeriodSettings
+                .OrderBy(r => r.Id)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Gets a single report period setting by ID
+        /// </summary>
+        public async Task<ReportPeriodSetting?> GetReportPeriodSettingAsync(int id)
+        {
+            return await _context.ReportPeriodSettings.FindAsync(id);
+        }
+
+        /// <summary>
+        /// Saves period settings changes to the database
+        /// </summary>
+        public async Task SaveReportPeriodSettingsAsync(List<ReportPeriodSetting> periodSettings)
+        {
+            foreach (var setting in periodSettings)
+            {
+                var existing = await _context.ReportPeriodSettings.FindAsync(setting.Id);
+                if (existing != null)
+                {
+                    existing.StartHour = setting.StartHour;
+                    existing.EndHour = setting.EndHour;
+                    existing.EndTimeMinutes = setting.EndTimeMinutes;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
         /// Gets weekly sales reports starting from Sunday
         /// </summary>
         public async Task<List<WeeklySalesReport>> GetWeeklySalesReportsAsync(DateTime startDate, DateTime endDate)

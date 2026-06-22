@@ -55,6 +55,7 @@ namespace JamrahPOS.ViewModels
         public ICommand NavigateToUsersCommand { get; }
         public ICommand NavigateToInventoryCommand { get; }
         public ICommand NavigateToReportsCommand { get; }
+        public ICommand NavigateToPeriodsCommand { get; }
 
         public MainViewModel()
         {
@@ -83,6 +84,7 @@ namespace JamrahPOS.ViewModels
                 NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers());
                 NavigateToInventoryCommand = new RelayCommand(_ => NavigateToInventory());
                 NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
+                NavigateToPeriodsCommand = new RelayCommand(_ => NavigateToPeriods(), _ => IsAdmin);
 
                 // Start with POS view
                 NavigateToPos();
@@ -200,6 +202,28 @@ namespace JamrahPOS.ViewModels
                 Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
                 Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
                 MessageBox.Show($"خطأ في فتح شاشة التقارير: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void NavigateToPeriods()
+        {
+            try
+            {
+                if (!IsAdmin)
+                {
+                    MessageBox.Show("هذه الميزة متاحة للمدير فقط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                Console.WriteLine("[MAIN] Navigating to Period Settings view");
+                CurrentView = new Views.ReportsView(3, false);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MAIN] ERROR navigating to Period Settings: {ex.Message}");
+                Console.WriteLine($"[MAIN] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[MAIN] Inner exception: {ex.InnerException?.Message}");
+                MessageBox.Show($"خطأ في فتح شاشة الفترات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

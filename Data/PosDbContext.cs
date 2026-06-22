@@ -16,6 +16,8 @@ namespace JamrahPOS.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<InventoryItem> InventoryItems { get; set; }
+        public DbSet<ReportPeriodSetting> ReportPeriodSettings { get; set; }
+        public DbSet<TimeOption> TimeOptions { get; set; }
 
         public PosDbContext()
         {
@@ -122,6 +124,24 @@ namespace JamrahPOS.Data
                       .WithMany(m => m.OrderItems)
                       .HasForeignKey(e => e.MenuItemId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure ReportPeriodSetting entity
+            modelBuilder.Entity<ReportPeriodSetting>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.StartHour).IsRequired();
+                entity.Property(e => e.EndHour).IsRequired();
+                entity.Property(e => e.EndTimeMinutes).IsRequired();
+            });
+
+            // Configure TimeOption entity
+            modelBuilder.Entity<TimeOption>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Hour).IsRequired();
+                entity.Property(e => e.Label).IsRequired().HasMaxLength(10);
             });
 
             // Seed initial data

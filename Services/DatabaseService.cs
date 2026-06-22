@@ -106,6 +106,60 @@ namespace JamrahPOS.Services
                 {
                     Console.WriteLine("[DB] Categories already exist. Skipping seed.");
                 }
+
+                // Check if time options exist, if not seed them
+                var timeOptionsCount = await _context.TimeOptions.CountAsync();
+                if (timeOptionsCount < 24)
+                {
+                    Console.WriteLine("[DB] Seeding time options for periods...");
+                    var timeOptions = Enumerable.Range(0, 24)
+                        .Select(hour => new Models.TimeOption
+                        {
+                            Hour = hour,
+                            Label = hour.ToString("D2") + ":00"
+                        })
+                        .ToArray();
+
+                    _context.TimeOptions.AddRange(timeOptions);
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("[DB] Seeded time options successfully");
+                }
+                else
+                {
+                    Console.WriteLine("[DB] Time options already exist. Skipping seed.");
+                }
+
+                // Check if period settings exist, if not seed default periods
+                var periodSettingsExist = await _context.ReportPeriodSettings.AnyAsync();
+                if (!periodSettingsExist)
+                {
+                    Console.WriteLine("[DB] Seeding default report period settings...");
+                    var periodSettings = new[]
+                    {
+                        new Models.ReportPeriodSetting
+                        {
+                            Name = "الفترة الأولى",
+                            StartHour = 7,
+                            EndHour = 17,
+                            EndTimeMinutes = 17 * 60
+                        },
+                        new Models.ReportPeriodSetting
+                        {
+                            Name = "الفترة الثانية",
+                            StartHour = 17,
+                            EndHour = 3,
+                            EndTimeMinutes = 3 * 60
+                        }
+                    };
+
+                    _context.ReportPeriodSettings.AddRange(periodSettings);
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("[DB] Seeded default period settings successfully");
+                }
+                else
+                {
+                    Console.WriteLine("[DB] Report period settings already exist. Skipping seed.");
+                }
             }
             catch (Exception ex)
             {
